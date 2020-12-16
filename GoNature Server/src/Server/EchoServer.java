@@ -77,18 +77,19 @@ public class EchoServer extends AbstractServer {
  *     
  */
       
-		
+		String done = "Done";
 		int flag=0;
 		String st = (String)msg;
 		String[] user = null;
 		String action =getAction(st);
 		String[] result= DecrypteMassege(st);
+		StringBuffer sb;
 		try {
 			switch (action) {
 			
 			case "submitVisitor":
 				user = sq.CheckForId(result[0]);
-				StringBuffer sb = new StringBuffer();
+				 sb = new StringBuffer();
 			    for(int i = 0; i < user.length; i++) {
 			         sb.append(user[i]);
 			         sb.append(" ");
@@ -101,21 +102,21 @@ public class EchoServer extends AbstractServer {
 				
 				if(sq.updateEmail(result)) {
 					user = sq.CheckForId(result[0]);
-					StringBuffer sb1 = new StringBuffer();
+					sb = new StringBuffer();
 				    for(int i = 0; i < user.length; i++) {
-				         sb1.append(user[i]);
-				         sb1.append(" ");
+				    	sb.append(user[i]);
+				    	sb.append(" ");
 				      }
-				      String str2 = sb1.toString();
+				      String str2 = sb.toString();
 				      client.sendToClient(str2);
 				}
 				break;	
 			case "connectivity":
-				StringBuffer sb2 = new StringBuffer();
-				sb2.append(getPort());
-				sb2.append(" ");
-				sb2.append(client);
-				String s = sb2.toString();
+				sb = new StringBuffer();
+				sb.append(getPort());
+				sb.append(" ");
+				sb.append(client);
+				String s = sb.toString();
 				 client.sendToClient(s);
 				break;
 			case "exit":
@@ -136,18 +137,42 @@ public class EchoServer extends AbstractServer {
 			case "canMakeOrder":
 				int currentVisitorsAtBoundry= sq.howManyForCurrentTimeAndDate(result);
 				int availableVisitors= sq.howManyAllowedInPark(result[2]);
-				StringBuffer sb3= new StringBuffer();
-				sb3.append("OrderController");
-				sb3.append(" ");
-				sb3.append("canMakeOrder");
-				sb3.append(" ");
-				sb3.append(Integer.toString(currentVisitorsAtBoundry));
-				sb3.append(" ");
-				sb3.append(Integer.toString(availableVisitors));
-				client.sendToClient(sb3.toString());
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("canMakeOrder");
+				sb.append(" ");
+				sb.append(Integer.toString(currentVisitorsAtBoundry));
+				sb.append(" ");
+				sb.append(Integer.toString(availableVisitors));
+				client.sendToClient(sb.toString());
 				break;
-			
-				
+			/*
+			 * This case will check first what number the order id will be
+			 * Will insert into the Order table the new order got from client
+			 */
+			case "confirmOrder":
+				int orderNum = sq.nextOrder();
+				sq.addOrder(orderNum,result);
+				client.sendToClient(done);
+				break;
+				/*
+				 * This method will search for the order and delete it
+				 */
+			case "cancelOrder":
+				sq.cancelOrder(result);
+				client.sendToClient(done);
+				break;
+			case "getExsistingOrders":
+				String res=sq.getOrders(result[0]);
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("getExsistingOrders");
+				sb.append(" ");
+				sb.append(res);
+				client.sendToClient(sb.toString());
+				break;
 			default:	
 				System.out.println("Sorry, don't know what you pressedsNow");
 			

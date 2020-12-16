@@ -135,7 +135,7 @@ public class sqlConnector {
 		Statement stm;
 		int i=0;
 	try {
-		PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.order");
+		PreparedStatement ps = conn.prepareStatement("SELECT * FROM gonaturedb.order");
 		stm = conn.createStatement();
 		ResultSet rs = ps.executeQuery();
 
@@ -147,7 +147,7 @@ public class sqlConnector {
 		e.printStackTrace();
 	}
 	
-	return i;
+	return ++i;
 	}
 	
 	/*
@@ -214,7 +214,7 @@ public class sqlConnector {
 			ps.setString(1, result[2]);
 			ps.setString(3, result[0]);
 			ps.setString(4, result[1]);
-			ps.setDate(2, wanted);
+			ps.setString(2, result[3]);
 			ResultSet rs=ps.executeQuery();
 			
 			while(rs.next()) {
@@ -227,6 +227,88 @@ public class sqlConnector {
 			
 		}
 		return counter;
+	}
+
+	/*Method to insert new order to table
+	 * res[0]=time res[1]=date, res[2]= parkname , res[3]=price, res[4]=id, res[5]=type, res[6]=numOfVisit
+	 * 
+	 */
+	
+	public void addOrder(int orderNum, String[] result) {
+		Statement stm;
+		LocalDate wanted1 = LocalDate.parse(result[1]);
+		Date wanted=java.sql.Date.valueOf(wanted1);
+		Time visitTime =java.sql.Time.valueOf(result[0]);
+		
+		
+		try {
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO gonaturedb.order (orderNum, TimeInPark, DateOfVisit, wantedPark, TotalPrice, ID,type,numOfVisitors) VALUES (?,?,?,?,?,?,?,?)");
+			ps.setInt(1, orderNum);
+			ps.setTime(2, visitTime);
+			ps.setDate(3, wanted);
+			ps.setString(4, result[2]);
+			ps.setFloat(5, Float.parseFloat(result[3]));
+			ps.setString(6, result[4]);
+			ps.setString(7, result[5]);
+			ps.setString(8, result[6]);
+			
+			ps.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		
+		
+	}
+	
+	/*
+	 * this method will search for the desired order and delete it from the DB.
+	 * res[0]=time, res[1]=date, res[2]=wantedPark, res[3]=id
+	 */
+	
+
+	public void cancelOrder(String[] result) {
+		Statement stm;
+
+		try {
+			PreparedStatement ps = conn.prepareStatement("DELETE FROM gonaturedb.order WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+			ps.setString(1, result[0]);
+			ps.setString(2, result[1]);
+			ps.setString(3, result[2]);
+			ps.setString(4, result[3]);
+			ps.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		
+		
+		
+		
+	}
+
+	public String getOrders(String iD) {
+		Statement stm;
+		StringBuffer s= new StringBuffer();
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice FROM gonaturedb.order WHERE ID=?");
+			ps.setString(1, iD);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()) {
+				for(int i=1;i<=6;i++)
+				{
+					s.append(rs.getString(i));
+					s.append(" ");
+				}
+				
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		s.append("Done");
+		
+		return s.toString();
 	}
 	
 }
