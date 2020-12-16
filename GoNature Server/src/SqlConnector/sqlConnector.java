@@ -68,6 +68,7 @@ public class sqlConnector {
 	public boolean exists(String[] msg) {
 		Statement stm;
 		try {
+
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE ID=?");
 			stm = conn.createStatement();
 			ps.setString(1, msg[0]);
@@ -88,7 +89,9 @@ public class sqlConnector {
 		String memberCNT = String.valueOf(nextMember());
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"INSERT project.person SET ID=? firstName=? lastName=? phoneNumber=? Email=? creditCardNum=? maxFamilyMembers=? memberId=?");
+
+					"INSERT project.person SET ID=?, firstName=?, lastName=?, phoneNumber=?, Email=?, creditCardNum=? ,maxFamilyMembers=? ,memberId=?");
+
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.setString(3, msg[2]);
@@ -105,8 +108,6 @@ public class sqlConnector {
 			e.printStackTrace();
 			return false;
 		}
-		
-
 	}
 	
 	public int nextMember() {
@@ -227,6 +228,7 @@ public class sqlConnector {
 			
 		}
 		return counter;
+
 	}
 
 	/*Method to insert new order to table
@@ -311,4 +313,5 @@ public class sqlConnector {
 		return s.toString();
 	}
 	
+
 }

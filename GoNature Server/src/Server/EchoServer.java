@@ -10,7 +10,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Vector;
 
-
 import src.ocsf.server.AbstractServer;
 import src.ocsf.server.ConnectionToClient;
 
@@ -67,8 +66,9 @@ public class EchoServer extends AbstractServer {
 	 * @param client The connection from which the message originated.
 	 * @param
 	 */
-	
+
 	public void handleMessageFromClient(Object msg, ConnectionToClient client) {
+
 /*
  *       
  *       will decrypte what type of action the server need to do
@@ -84,9 +84,10 @@ public class EchoServer extends AbstractServer {
 		String action =getAction(st);
 		String[] result= DecrypteMassege(st);
 		StringBuffer sb;
+
 		try {
 			switch (action) {
-			
+
 			case "submitVisitor":
 				user = sq.CheckForId(result[0]);
 				 sb = new StringBuffer();
@@ -97,11 +98,13 @@ public class EchoServer extends AbstractServer {
 			    
 			      String str = sb.toString();
 			      client.sendToClient(str);
+
 				break;
 			case "updateVisitor":
-				
-				if(sq.updateEmail(result)) {
+
+				if (sq.updateEmail(result)) {
 					user = sq.CheckForId(result[0]);
+
 					sb = new StringBuffer();
 				    for(int i = 0; i < user.length; i++) {
 				    	sb.append(user[i]);
@@ -110,7 +113,7 @@ public class EchoServer extends AbstractServer {
 				      String str2 = sb.toString();
 				      client.sendToClient(str2);
 				}
-				break;	
+				break;
 			case "connectivity":
 				sb = new StringBuffer();
 				sb.append(getPort());
@@ -118,10 +121,28 @@ public class EchoServer extends AbstractServer {
 				sb.append(client);
 				String s = sb.toString();
 				 client.sendToClient(s);
+				
+			case "exists":
+				res=sq.exists(result);
+				StringBuffer sb3= new StringBuffer();
+				sb3.append("SignUpController");
+				sb3.append(" ");
+				sb3.append(res);
+		
+				client.sendToClient(sb3.toString());
+				break;
+			case "addMember":
+				res=sq.addMember(result);
+				StringBuffer sb4= new StringBuffer();
+				String se ="Done";
+				
+				
+				client.sendToClient(se);	
 				break;
 			case "exit":
 				serverStopped();
 				break;
+
 			
 				
 			/*
@@ -175,82 +196,79 @@ public class EchoServer extends AbstractServer {
 				break;
 			default:	
 				System.out.println("Sorry, don't know what you pressedsNow");
-			
-			}	
-		} catch(Exception e) {
+			}
+		} catch (Exception e) {
 			System.out.println("Erro");
 		}
-		
+
 	}
-	
-/*
- * This method will return the information about the id got
- * Return a string array containing all the informations.
- * 
- * 	
- */
+
+	/*
+	 * This method will return the information about the id got Return a string
+	 * array containing all the informations.
+	 * 
+	 * 
+	 */
 
 	public String[] DecrypteMassege(String msg) {
 		String[] gotFromClient = msg.split(" ");
-		String[] res= new String[gotFromClient.length-1];
-	    for(int i = 1; i <gotFromClient.length; i++) {
-	       res[i-1]=gotFromClient[i];
-	    }
-	    return res;
-	    
+		String[] res = new String[gotFromClient.length - 1];
+		for (int i = 1; i < gotFromClient.length; i++) {
+			res[i - 1] = gotFromClient[i];
+		}
+		return res;
+
 	}
-	
+
 	public String getAction(String msg) {
 		String[] result = msg.split(" ");
 		return result[0];
 	}
-	
+
 	/**
 	 * This method overrides the one in the superclass. Called when the server
 	 * starts listening for connections.
 	 */
 	protected void serverStarted() {
-		
-		System.out.println("Server listening for connections on port " + getPort());
-		
-		
-		try 
-		{
-            Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-           // System.out.println("Driver definition succeed");
-        } catch (Exception ex) {
-        	/* handle the error*/
-        	 System.out.println("Driver definition failed");
-        	 }
-        
-        try 
-        {
-             conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST","root","");
-            System.out.println("Successfuly loged-in");
-            sq = new sqlConnector(conn);
 
-	}catch (SQLException ex) 
- 	    {/* handle any errors*/
-        System.out.println("SQLException: " + ex.getMessage());
-        System.out.println("SQLState: " + ex.getSQLState());
-        System.out.println("VendorError: " + ex.getErrorCode());
-        }
-        }
+		System.out.println("Server listening for connections on port " + getPort());
+
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+			// System.out.println("Driver definition succeed");
+		} catch (Exception ex) {
+			/* handle the error */
+			System.out.println("Driver definition failed");
+		}
+
+		try {
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
+			System.out.println("Successfuly loged-in");
+			sq = new sqlConnector(conn);
+
+		} catch (SQLException ex) {/* handle any errors */
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		}
+	}
 
 	/**
 	 * This method overrides the one in the superclass. Called when the server stops
 	 * listening for connections.
-	 * @throws IOException 
+	 * 
+	 * @throws IOException
 	 */
 	protected void serverStopped() {
 		System.out.println("Server has stopped listening for connections.");
-		try{
+		try {
 			close();
 			System.exit(0);
-		}catch(IOException e) {System.out.println("The server is closed now");}
-		
+		} catch (IOException e) {
+			System.out.println("The server is closed now");
+		}
+
 	}
 
-	
 }
 //End of EchoServer class
