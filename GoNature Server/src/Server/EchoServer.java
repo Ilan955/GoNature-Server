@@ -68,55 +68,59 @@ public class EchoServer extends AbstractServer {
 	 */
 
 	public void handleMessageFromClient(Object msg, ConnectionToClient client) {
-		/*
-		 * 
-		 * will decrypte what type of action the server need to do using switch case to
-		 * simplify the actions the server will make every time the first place in the
-		 * string array will tell what type of method to triger.
-		 * 
-		 */
 
-		int flag = 0;
-		Boolean res;
-		String st = (String) msg;
+/*
+ *       
+ *       will decrypte what type of action the server need to do
+ *       using switch case to simplify the actions the server will make
+ *    	every time the first place in the string array will tell what type of method to triger.
+ *     
+ */
+      
+		String done = "Done";
+		int flag=0;
+		String st = (String)msg;
 		String[] user = null;
-		String action = getAction(st);
-		String[] result = DecrypteMassege(st);
+		String action =getAction(st);
+		String[] result= DecrypteMassege(st);
+		StringBuffer sb;
+
 		try {
 			switch (action) {
 
 			case "submitVisitor":
 				user = sq.CheckForId(result[0]);
-				StringBuffer sb = new StringBuffer();
-				for (int i = 0; i < user.length; i++) {
-					sb.append(user[i]);
-					sb.append(" ");
-				}
+				 sb = new StringBuffer();
+			    for(int i = 0; i < user.length; i++) {
+			         sb.append(user[i]);
+			         sb.append(" ");
+			      }
+			    
+			      String str = sb.toString();
+			      client.sendToClient(str);
 
-				String str = sb.toString();
-				client.sendToClient(str);
 				break;
 			case "updateVisitor":
 
 				if (sq.updateEmail(result)) {
 					user = sq.CheckForId(result[0]);
-					StringBuffer sb1 = new StringBuffer();
-					for (int i = 0; i < user.length; i++) {
-						sb1.append(user[i]);
-						sb1.append(" ");
-					}
-					String str2 = sb1.toString();
-					client.sendToClient(str2);
+
+					sb = new StringBuffer();
+				    for(int i = 0; i < user.length; i++) {
+				    	sb.append(user[i]);
+				    	sb.append(" ");
+				      }
+				      String str2 = sb.toString();
+				      client.sendToClient(str2);
 				}
 				break;
 			case "connectivity":
-				StringBuffer sb2 = new StringBuffer();
-				sb2.append(getPort());
-				sb2.append(" ");
-				sb2.append(client);
-				String s = sb2.toString();
-				client.sendToClient(s);
-				break;
+				sb = new StringBuffer();
+				sb.append(getPort());
+				sb.append(" ");
+				sb.append(client);
+				String s = sb.toString();
+				 client.sendToClient(s);
 				
 			case "exists":
 				res=sq.exists(result);
@@ -133,12 +137,64 @@ public class EchoServer extends AbstractServer {
 				String se ="Done";
 				
 				
-				client.sendToClient(se);
+				client.sendToClient(se);	
 				break;
 			case "exit":
 				serverStopped();
 				break;
-			default:
+
+			
+				
+			/*
+			 * will check with the order table all the orders in the current date and time
+			 * return the number of visitors in all this orders
+			 * will compare the total number of visitors in park (from this orders)
+			 * with the number of visitors can enter to the wanted park,
+			 * if the sum of the desired visitors with the current visitors from the order greater then visitors can enter park
+			 * will return false to the order controller
+			 * AvailableVisitors= How many allowed every X hours in the park
+			 * currentVisitorsAtBoundry=How many visitors already will be in park in the gapTime
+			 */
+			case "canMakeOrder":
+				int currentVisitorsAtBoundry= sq.howManyForCurrentTimeAndDate(result);
+				int availableVisitors= sq.howManyAllowedInPark(result[2]);
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("canMakeOrder");
+				sb.append(" ");
+				sb.append(Integer.toString(currentVisitorsAtBoundry));
+				sb.append(" ");
+				sb.append(Integer.toString(availableVisitors));
+				client.sendToClient(sb.toString());
+				break;
+			/*
+			 * This case will check first what number the order id will be
+			 * Will insert into the Order table the new order got from client
+			 */
+			case "confirmOrder":
+				int orderNum = sq.nextOrder();
+				sq.addOrder(orderNum,result);
+				client.sendToClient(done);
+				break;
+				/*
+				 * This method will search for the order and delete it
+				 */
+			case "cancelOrder":
+				sq.cancelOrder(result);
+				client.sendToClient(done);
+				break;
+			case "getExsistingOrders":
+				String res=sq.getOrders(result[0]);
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("getExsistingOrders");
+				sb.append(" ");
+				sb.append(res);
+				client.sendToClient(sb.toString());
+				break;
+			default:	
 				System.out.println("Sorry, don't know what you pressedsNow");
 			}
 		} catch (Exception e) {
