@@ -10,7 +10,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Vector;
 
-
 import src.ocsf.server.AbstractServer;
 import src.ocsf.server.ConnectionToClient;
 
@@ -67,138 +66,153 @@ public class EchoServer extends AbstractServer {
 	 * @param client The connection from which the message originated.
 	 * @param
 	 */
-	
+
 	public void handleMessageFromClient(Object msg, ConnectionToClient client) {
-/*
- *       
- *       will decrypte what type of action the server need to do
- *       using switch case to simplify the actions the server will make
- *    	every time the first place in the string array will tell what type of method to triger.
- *     
- */
-      
-		
-		int flag=0;
-		String st = (String)msg;
+		/*
+		 * 
+		 * will decrypte what type of action the server need to do using switch case to
+		 * simplify the actions the server will make every time the first place in the
+		 * string array will tell what type of method to triger.
+		 * 
+		 */
+
+		int flag = 0;
+		Boolean res;
+		String st = (String) msg;
 		String[] user = null;
-		String action =getAction(st);
-		String[] result= DecrypteMassege(st);
+		String action = getAction(st);
+		String[] result = DecrypteMassege(st);
 		try {
 			switch (action) {
-			
+
 			case "submitVisitor":
 				user = sq.CheckForId(result[0]);
 				StringBuffer sb = new StringBuffer();
-			    for(int i = 0; i < user.length; i++) {
-			         sb.append(user[i]);
-			         sb.append(" ");
-			      }
-			    
-			      String str = sb.toString();
-			      client.sendToClient(str);
+				for (int i = 0; i < user.length; i++) {
+					sb.append(user[i]);
+					sb.append(" ");
+				}
+
+				String str = sb.toString();
+				client.sendToClient(str);
 				break;
 			case "updateVisitor":
-				
-				if(sq.updateEmail(result)) {
+
+				if (sq.updateEmail(result)) {
 					user = sq.CheckForId(result[0]);
 					StringBuffer sb1 = new StringBuffer();
-				    for(int i = 0; i < user.length; i++) {
-				         sb1.append(user[i]);
-				         sb1.append(" ");
-				      }
-				      String str2 = sb1.toString();
-				      client.sendToClient(str2);
+					for (int i = 0; i < user.length; i++) {
+						sb1.append(user[i]);
+						sb1.append(" ");
+					}
+					String str2 = sb1.toString();
+					client.sendToClient(str2);
 				}
-				break;	
+				break;
 			case "connectivity":
 				StringBuffer sb2 = new StringBuffer();
 				sb2.append(getPort());
 				sb2.append(" ");
 				sb2.append(client);
 				String s = sb2.toString();
-				 client.sendToClient(s);
+				client.sendToClient(s);
+				break;
+				
+			case "exists":
+				res=sq.exists(result);
+				StringBuffer sb3= new StringBuffer();
+				sb3.append("SignUpController");
+				sb3.append(" ");
+				sb3.append(res);
+		
+				client.sendToClient(sb3.toString());
+				break;
+			case "addMember":
+				res=sq.addMember(result);
+				StringBuffer sb4= new StringBuffer();
+				String se ="Done";
+				
+				
+				client.sendToClient(se);
 				break;
 			case "exit":
 				serverStopped();
 				break;
-			default:	
+			default:
 				System.out.println("Sorry, don't know what you pressedsNow");
-			
-			}	
-		} catch(Exception e) {
+			}
+		} catch (Exception e) {
 			System.out.println("Erro");
 		}
-		
+
 	}
-	
-/*
- * This method will return the information about the id got
- * Return a string array containing all the informations.
- * 
- * 	
- */
+
+	/*
+	 * This method will return the information about the id got Return a string
+	 * array containing all the informations.
+	 * 
+	 * 
+	 */
 
 	public String[] DecrypteMassege(String msg) {
 		String[] gotFromClient = msg.split(" ");
-		String[] res= new String[gotFromClient.length-1];
-	    for(int i = 1; i <gotFromClient.length; i++) {
-	       res[i-1]=gotFromClient[i];
-	    }
-	    return res;
-	    
+		String[] res = new String[gotFromClient.length - 1];
+		for (int i = 1; i < gotFromClient.length; i++) {
+			res[i - 1] = gotFromClient[i];
+		}
+		return res;
+
 	}
-	
+
 	public String getAction(String msg) {
 		String[] result = msg.split(" ");
 		return result[0];
 	}
-	
+
 	/**
 	 * This method overrides the one in the superclass. Called when the server
 	 * starts listening for connections.
 	 */
 	protected void serverStarted() {
-		
-		System.out.println("Server listening for connections on port " + getPort());
-		
-		
-		try 
-		{
-            Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-           // System.out.println("Driver definition succeed");
-        } catch (Exception ex) {
-        	/* handle the error*/
-        	 System.out.println("Driver definition failed");
-        	 }
-        
-        try 
-        {
-             conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST","root","");
-            System.out.println("Successfuly loged-in");
-            sq = new sqlConnector(conn);
 
-	}catch (SQLException ex) 
- 	    {/* handle any errors*/
-        System.out.println("SQLException: " + ex.getMessage());
-        System.out.println("SQLState: " + ex.getSQLState());
-        System.out.println("VendorError: " + ex.getErrorCode());
-        }
-        }
+		System.out.println("Server listening for connections on port " + getPort());
+
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+			// System.out.println("Driver definition succeed");
+		} catch (Exception ex) {
+			/* handle the error */
+			System.out.println("Driver definition failed");
+		}
+
+		try {
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
+			System.out.println("Successfuly loged-in");
+			sq = new sqlConnector(conn);
+
+		} catch (SQLException ex) {/* handle any errors */
+			System.out.println("SQLException: " + ex.getMessage());
+			System.out.println("SQLState: " + ex.getSQLState());
+			System.out.println("VendorError: " + ex.getErrorCode());
+		}
+	}
 
 	/**
 	 * This method overrides the one in the superclass. Called when the server stops
 	 * listening for connections.
-	 * @throws IOException 
+	 * 
+	 * @throws IOException
 	 */
 	protected void serverStopped() {
 		System.out.println("Server has stopped listening for connections.");
-		try{
+		try {
 			close();
 			System.exit(0);
-		}catch(IOException e) {System.out.println("The server is closed now");}
-		
+		} catch (IOException e) {
+			System.out.println("The server is closed now");
+		}
+
 	}
 
-	
 }
 //End of EchoServer class
