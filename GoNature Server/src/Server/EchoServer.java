@@ -76,19 +76,22 @@ public class EchoServer extends AbstractServer {
  *    	every time the first place in the string array will tell what type of method to triger.
  *     
  */
-      
-		
-		int flag=0;
+		String s;
+		String[] bar_String;
+		StringBuffer sb;
 		String st = (String)msg;
 		String[] user = null;
 		String action =getAction(st);
 		String[] result= DecrypteMassege(st);
+		//System.out.println(action);
+		//System.out.println(msg.toString());
+		//System.out.println(result[0]);
 		try {
 			switch (action) {
 			
 			case "submitVisitor":
 				user = sq.CheckForId(result[0]);
-				StringBuffer sb = new StringBuffer();
+				sb = new StringBuffer();
 			    for(int i = 0; i < user.length; i++) {
 			         sb.append(user[i]);
 			         sb.append(" ");
@@ -115,8 +118,45 @@ public class EchoServer extends AbstractServer {
 				sb2.append(getPort());
 				sb2.append(" ");
 				sb2.append(client);
-				String s = sb2.toString();
+				s = sb2.toString();
 				 client.sendToClient(s);
+				break;
+			case "getEmployeeDetails":
+				if (sq.canGetEmployee(result[0]))
+				{
+					bar_String = new String[12];
+					StringBuffer checkString = new StringBuffer();
+					checkString.append(result[0]);
+					checkString.append(" ");
+					checkString.append(result[1]);
+					System.out.println("I am getEmployeeDetails: " + checkString.toString());
+					bar_String = sq.getEmployeeUN(checkString.toString());
+					sb = new StringBuffer();
+					for (int i=0;i<bar_String.length;i++)
+					{
+							sb.append(bar_String[i]);
+							sb.append(" "); 
+					}
+					String s2 = sb.toString();
+					client.sendToClient(s2);
+				}
+				break;
+			case "getTravellerDetails":
+				if (sq.canGetTraveller(result[0]))
+				{
+					//System.out.print(result[0]);
+					bar_String = new String[7];
+					bar_String = sq.getTravellerFromDB(result[0]);
+					sb = new StringBuffer();
+					for (int i=0;i<bar_String.length;i++)
+					{
+						sb.append(bar_String[i]);
+						sb.append(" ");
+					}
+					String sendMe = sb.toString();
+				//	System.out.print(sb4.toString());
+					client.sendToClient(sendMe);
+				}
 				break;
 			case "exit":
 				serverStopped();
