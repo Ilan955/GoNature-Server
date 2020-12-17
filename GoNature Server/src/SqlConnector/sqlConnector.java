@@ -136,13 +136,17 @@ public class sqlConnector {
 		Statement stm;
 		int i=0;
 	try {
-		PreparedStatement ps = conn.prepareStatement("SELECT * FROM gonaturedb.order");
+		PreparedStatement ps = conn.prepareStatement("SELECT orderNum FROM gonaturedb.order ORDER BY orderNum DESC ");
 		stm = conn.createStatement();
 		ResultSet rs = ps.executeQuery();
-
+		if(rs.isLast())
+			System.out.println("GREAT!");
 		while (rs.next()) {
-			i++;
+			String tmp = rs.getString(1);
+			 i = Integer.parseInt(tmp);
+			 break;
 		}
+		
 
 	} catch (SQLException e) {
 		e.printStackTrace();
@@ -240,13 +244,12 @@ public class sqlConnector {
 		Statement stm;
 		LocalDate wanted1 = LocalDate.parse(result[1]);
 		Date wanted=java.sql.Date.valueOf(wanted1);
-		Time visitTime =java.sql.Time.valueOf(result[0]);
 		
 		
 		try {
 			PreparedStatement ps = conn.prepareStatement("INSERT INTO gonaturedb.order (orderNum, TimeInPark, DateOfVisit, wantedPark, TotalPrice, ID,type,numOfVisitors) VALUES (?,?,?,?,?,?,?,?)");
 			ps.setInt(1, orderNum);
-			ps.setTime(2, visitTime);
+			ps.setString(2, result[0]);
 			ps.setDate(3, wanted);
 			ps.setString(4, result[2]);
 			ps.setFloat(5, Float.parseFloat(result[3]));

@@ -123,6 +123,7 @@ public class EchoServer extends AbstractServer {
 				 client.sendToClient(s);
 				
 			case "exists":
+				boolean res;
 				res=sq.exists(result);
 				StringBuffer sb3= new StringBuffer();
 				sb3.append("SignUpController");
@@ -131,6 +132,7 @@ public class EchoServer extends AbstractServer {
 		
 				client.sendToClient(sb3.toString());
 				break;
+				
 			case "addMember":
 				res=sq.addMember(result);
 				StringBuffer sb4= new StringBuffer();
@@ -185,13 +187,13 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(done);
 				break;
 			case "getExsistingOrders":
-				String res=sq.getOrders(result[0]);
+				String res1=sq.getOrders(result[0]);
 				sb= new StringBuffer();
 				sb.append("OrderController");
 				sb.append(" ");
 				sb.append("getExsistingOrders");
 				sb.append(" ");
-				sb.append(res);
+				sb.append(res1);
 				client.sendToClient(sb.toString());
 				break;
 			default:	
