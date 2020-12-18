@@ -146,14 +146,33 @@ public class EchoServer extends AbstractServer {
 				sb3.append(Integer.toString(availableVisitors));
 				client.sendToClient(sb3.toString());
 				break;
-			
 				
+			case "DetailsPark":
+				int currentVisitors=sq.howManyCurrentvisitorsForOrdersInPark(result[0]);
+				int unexpectedVisitors=sq.howManyUnexpectedVisitorsInPark(result[0]);
+				int maxAvailableVisitors=sq.howManyAllowedInPark(result[0]);
+				int maxVisitors=sq.howManyMaxvisitorsAllowedInPark(result[0]);
+				StringBuffer sb4= new StringBuffer();
+				sb4.append("ParkController");
+				sb4.append(" ");
+				sb4.append("DetailsPark");
+				sb4.append(" ");
+				sb4.append(Integer.toString(currentVisitors));
+				sb4.append(" ");
+				sb4.append(Integer.toString(unexpectedVisitors));
+				sb4.append(" ");
+				sb4.append(Integer.toString(maxAvailableVisitors));
+				sb4.append(" ");
+				sb4.append(Integer.toString(maxVisitors));
+				client.sendToClient(sb4.toString());
+				break;
+			
 			default:	
-				System.out.println("Sorry, don't know what you pressedsNow");
+				System.out.println("Sorry, don't know what you presse Now");
 			
 			}	
 		} catch(Exception e) {
-			System.out.println("Erro");
+			System.out.println("Error");
 		}
 		
 	}
@@ -200,7 +219,7 @@ public class EchoServer extends AbstractServer {
         
         try 
         {
-             conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST","root","");
+             conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST","root","root");
             System.out.println("Successfuly loged-in");
             sq = new sqlConnector(conn);
 

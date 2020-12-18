@@ -216,7 +216,7 @@ public class sqlConnector {
 			ps.setString(4, result[1]);
 			ps.setDate(2, wanted);
 			ResultSet rs=ps.executeQuery();
-			
+			stm = conn.createStatement();
 			while(rs.next()) {
 				counter+=rs.getInt(1);
 				System.out.println(rs.getString(2));
@@ -228,5 +228,91 @@ public class sqlConnector {
 		}
 		return counter;
 	}
+	
+	
+	public int howManyUnexpectedVisitorsInPark(String parkName) {
+		String res;
+		int unexpectedVisitors=0;
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE ParkName=?");
+			ps.setString(1, parkName);
+			stm = conn.createStatement();
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()) {
+			res=rs.getString(1);
+			unexpectedVisitors=Integer.parseInt(res);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		return unexpectedVisitors;
+	}
+	
+	public int howManyCurrentvisitorsForOrdersInPark(String parkName) {
+		String res;
+		int currentvisitors=0;
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT currentVisitors FROM project.park WHERE ParkName=?");
+			ps.setString(1, parkName);
+			stm = conn.createStatement();
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()) {
+			res=rs.getString(1);
+			currentvisitors=Integer.parseInt(res);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		return currentvisitors;
+	}
+	
+	public int howManyMaxvisitorsAllowedInPark(String parkName) {
+		String res;
+		int Maxvisitors=0;
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT maxVisitors FROM project.park WHERE ParkName=?");
+			ps.setString(1, parkName);
+			stm = conn.createStatement();
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()) {
+			res=rs.getString(1);
+			Maxvisitors=Integer.parseInt(res);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		return Maxvisitors;
+	}
+	
+//	public String[] DetailsPark(String[] msg) {
+//		Statement stm;
+//		String[] s = new String[7];
+//		try {
+//			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.park WHERE ParkName=?");
+//			stm = conn.createStatement();
+//			ps.setString(1, msg[0]);
+//			ResultSet rs = ps.executeQuery();
+//
+//			while (rs.next()) {
+//				s[0] = rs.getString(1);
+//				s[1] = rs.getString(2);
+//				s[2] = rs.getString(3);
+//				s[3] = rs.getString(4);
+//				s[4] = rs.getString(5);
+//				s[5] = rs.getString(6);
+//			}
+//
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+//		return s;
+//	}
+	
 	
 }
