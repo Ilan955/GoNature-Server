@@ -22,12 +22,13 @@ public class sqlConnector {
 
 	public String[] CheckForId(String msg) {
 		Statement stm;
-		String[] s = new String[5];
+		String[] s = new String[5]; 
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE ID=?");
 			stm = conn.createStatement();
 			ps.setString(1, msg);
 			ResultSet rs = ps.executeQuery();
+
 
 			while (rs.next()) {
 				s[0] = rs.getString(1);
@@ -68,6 +69,7 @@ public class sqlConnector {
 	public boolean exists(String[] msg) {
 		Statement stm;
 		try {
+
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE ID=?");
 			stm = conn.createStatement();
 			ps.setString(1, msg[0]);
@@ -88,7 +90,9 @@ public class sqlConnector {
 		String memberCNT = String.valueOf(nextMember());
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"INSERT project.person SET ID=? firstName=? lastName=? phoneNumber=? Email=? creditCardNum=? maxFamilyMembers=? memberId=?");
+
+					"INSERT project.person SET ID=?, firstName=?, lastName=?, phoneNumber=?, Email=?, creditCardNum=? ,maxFamilyMembers=? ,memberId=?");
+
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.setString(3, msg[2]);
@@ -105,8 +109,6 @@ public class sqlConnector {
 			e.printStackTrace();
 			return false;
 		}
-		
-
 	}
 	
 	public int nextMember() {
@@ -135,19 +137,23 @@ public class sqlConnector {
 		Statement stm;
 		int i=0;
 	try {
-		PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.order");
+		PreparedStatement ps = conn.prepareStatement("SELECT orderNum FROM gonaturedb.order ORDER BY orderNum DESC ");
 		stm = conn.createStatement();
 		ResultSet rs = ps.executeQuery();
-
+		if(rs.isLast())
+			System.out.println("GREAT!");
 		while (rs.next()) {
-			i++;
+			String tmp = rs.getString(1);
+			 i = Integer.parseInt(tmp);
+			 break;
 		}
+		
 
 	} catch (SQLException e) {
 		e.printStackTrace();
 	}
 	
-	return i;
+	return ++i;
 	}
 	
 	/*
@@ -214,7 +220,7 @@ public class sqlConnector {
 			ps.setString(1, result[2]);
 			ps.setString(3, result[0]);
 			ps.setString(4, result[1]);
-			ps.setDate(2, wanted);
+			ps.setString(2, result[3]);
 			ResultSet rs=ps.executeQuery();
 			stm = conn.createStatement();
 			while(rs.next()) {
@@ -227,6 +233,159 @@ public class sqlConnector {
 			
 		}
 		return counter;
+
+	}
+
+	/*Method to insert new order to table
+	 * res[0]=time res[1]=date, res[2]= parkname , res[3]=price, res[4]=id, res[5]=type, res[6]=numOfVisit
+	 * 
+	 */
+	
+	public void addOrder(int orderNum, String[] result) {
+		Statement stm;
+		LocalDate wanted1 = LocalDate.parse(result[1]);
+		Date wanted=java.sql.Date.valueOf(wanted1);
+		
+		
+		try {
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO gonaturedb.order (orderNum, TimeInPark, DateOfVisit, wantedPark, TotalPrice, ID,type,numOfVisitors) VALUES (?,?,?,?,?,?,?,?)");
+			ps.setInt(1, orderNum);
+			ps.setString(2, result[0]);
+			ps.setDate(3, wanted);
+			ps.setString(4, result[2]);
+			ps.setFloat(5, Float.parseFloat(result[3]));
+			ps.setString(6, result[4]);
+			ps.setString(7, result[5]);
+			ps.setString(8, result[6]);
+			
+			ps.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		
+		
+	}
+	public boolean canGetEmployee(String userName) { //method checks if employee exists on our DB (By UserName)
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.employees WHERE userName = ?");
+			stm = conn.createStatement();
+			ps.setString(1, userName);
+			ps.executeQuery();
+			return true;
+		}catch (SQLException e) {e.printStackTrace();
+									return false;}
+	}
+	public String[] getEmployeeUN(String empID) // if employee exists, DB returns this employee as a tuple (String[])
+	{
+		Statement stm;
+		String check[] = empID.split(" ");
+		String[] s = new String[12];
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.employees WHERE userName = ?");
+			stm = conn.createStatement();
+			ps.setString(1, check[0]);
+			ResultSet rs = ps.executeQuery();
+			s[0] = "EmployeeController"; //For GoClient.HandleMessageFromServer
+			s[1] = "IdentifyEmployee"; //in this case we assume that employee is in our DB --> if it isn't it will change
+				while(rs.next())
+				{
+					for (int i=2;i<12;i++) 
+						s[i] = rs.getString(i-1);
+				}
+			if (s[10] == null)
+				s[1] = "IdentifyNotExistingEmployee"; //Means that we didn't find an employee with this userName 
+			else if (!(s[11].equals(check[1]))) {// It means that passwords do not match and employee can not enter to GoNature system
+				s[1] = "IdentifyPasswordDoesNotMatch";
+				s[11] = null;
+			}
+		}catch(SQLException e) {e.printStackTrace();}
+		return s;
+	}
+	public boolean canGetTraveller(String travellerID) //Checks if traveller exists in our DB (By ID)
+	{
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.traveller WHERE ID = ? OR MemberID = ?");
+			ps.setString(1, travellerID);
+			ps.setString(2,  travellerID);
+			ps.executeQuery();
+			return true;
+		}catch (SQLException e) {e.printStackTrace();
+									return false;
+		}
+	}
+	public String[] getTravellerFromDB(String travellerID) //returns a String[] with this traveller info 
+	{
+		int flag = 0;
+		Statement stm;
+		String[] s = new String[7]; //should be as number fields number in traveller class
+		//I am working currently on a DB with 5 fields for traveller. It works
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.traveller WHERE ID=? OR MemberID = ?");
+			stm = conn.createStatement();
+			ps.setString(1, travellerID);
+			ps.setString(2, travellerID);
+			ResultSet rs = ps.executeQuery();
+			s[0] = "UserController"; //for use of GoClient.HandleMessageFromServer
+			s[1] = "IdentifyTraveller";
+			while(rs.next())
+				for (int i=2;i<7;i++)
+					s[i] = rs.getString(i-1);
+					//System.out.print(rs.getString(i).toString());
+			if (s[2] == null)
+			{
+				s[1] = "IdentifyNotExistingTraveller";
+			}
+		}catch(SQLException e) {e.printStackTrace();}
+		return s;
+	}
+
+	
+
+	public void cancelOrder(String[] result) {
+		Statement stm;
+
+		try {
+			PreparedStatement ps = conn.prepareStatement("DELETE FROM gonaturedb.order WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+			ps.setString(1, result[0]);
+			ps.setString(2, result[1]);
+			ps.setString(3, result[2]);
+			ps.setString(4, result[3]);
+			ps.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		
+		
+		
+		
+	}
+
+	public String getOrders(String iD) {
+		Statement stm;
+		StringBuffer s= new StringBuffer();
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice FROM gonaturedb.order WHERE ID=?");
+			ps.setString(1, iD);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()) {
+				for(int i=1;i<=6;i++)
+				{
+					s.append(rs.getString(i));
+					s.append(" ");
+				}
+				
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		s.append("Done");
+		
+		return s.toString();
 	}
 	
 	
@@ -290,29 +449,5 @@ public class sqlConnector {
 		return Maxvisitors;
 	}
 	
-//	public String[] DetailsPark(String[] msg) {
-//		Statement stm;
-//		String[] s = new String[7];
-//		try {
-//			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.park WHERE ParkName=?");
-//			stm = conn.createStatement();
-//			ps.setString(1, msg[0]);
-//			ResultSet rs = ps.executeQuery();
-//
-//			while (rs.next()) {
-//				s[0] = rs.getString(1);
-//				s[1] = rs.getString(2);
-//				s[2] = rs.getString(3);
-//				s[3] = rs.getString(4);
-//				s[4] = rs.getString(5);
-//				s[5] = rs.getString(6);
-//			}
-//
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		}
-//		return s;
-//	}
-	
-	
+
 }
