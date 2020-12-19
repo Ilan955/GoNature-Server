@@ -68,63 +68,124 @@ public class EchoServer extends AbstractServer {
 	 */
 
 	public void handleMessageFromClient(Object msg, ConnectionToClient client) {
-		/*
-		 * 
-		 * will decrypte what type of action the server need to do using switch case to
-		 * simplify the actions the server will make every time the first place in the
-		 * string array will tell what type of method to triger.
-		 * 
-		 */
 
-		int flag = 0;
-		Boolean res;
-		String st = (String) msg;
+/*
+ *       
+ *       will decrypte what type of action the server need to do
+ *       using switch case to simplify the actions the server will make
+ *    	every time the first place in the string array will tell what type of method to triger.
+ *     
+ */
+
+		
+		String[] bar_String;
+		
+
+      
+		String done = "Done";
+		int flag=0;
+		String st = (String)msg;
 		String[] user = null;
-		String action = getAction(st);
-		String[] result = DecrypteMassege(st);
+		String action =getAction(st);
+		String[] result= DecrypteMassege(st);
+
+		StringBuffer sb;
+
+
 		try {
 			switch (action) {
 
 			case "submitVisitor":
 				user = sq.CheckForId(result[0]);
-				StringBuffer sb = new StringBuffer();
-				for (int i = 0; i < user.length; i++) {
-					sb.append(user[i]);
-					sb.append(" ");
-				}
 
-				String str = sb.toString();
-				client.sendToClient(str);
+				 sb = new StringBuffer();
+			    for(int i = 0; i < user.length; i++) {
+			         sb.append(user[i]);
+			         sb.append(" ");
+			      }
+			    
+			      String str = sb.toString();
+			      client.sendToClient(str);
+
 				break;
 			case "updateVisitor":
 
 				if (sq.updateEmail(result)) {
 					user = sq.CheckForId(result[0]);
-					StringBuffer sb1 = new StringBuffer();
-					for (int i = 0; i < user.length; i++) {
-						sb1.append(user[i]);
-						sb1.append(" ");
-					}
-					String str2 = sb1.toString();
-					client.sendToClient(str2);
+
+					sb = new StringBuffer();
+				    for(int i = 0; i < user.length; i++) {
+				    	sb.append(user[i]);
+				    	sb.append(" ");
+				      }
+				      String str2 = sb.toString();
+				      client.sendToClient(str2);
 				}
 				break;
 			case "connectivity":
-				StringBuffer sb2 = new StringBuffer();
-				sb2.append(getPort());
-				sb2.append(" ");
-				sb2.append(client);
-				String s = sb2.toString();
-				client.sendToClient(s);
-				break;
+
+				sb = new StringBuffer();
+				sb.append(getPort());
+				sb.append(" ");
+				sb.append(client);
+				String s = sb.toString();
+				 client.sendToClient(s);
 				
 			case "exists":
+				boolean res;
 				res=sq.exists(result);
-				client.sendToClient(res);
+				StringBuffer sb3= new StringBuffer();
+				sb3.append("SignUpController");
+				sb3.append(" ");
+				sb3.append(res);
+		
+				client.sendToClient(sb3.toString());
 				break;
+				
 			case "addMember":
-				res=sq.exists(result);
-				client.sendToClient(res);
+				res=sq.addMember(result);
+				StringBuffer sb4= new StringBuffer();
+				String se ="Done";
+				
+				
+				client.sendToClient(se);	
+				break;
+			case "getEmployeeDetails":
+				if (sq.canGetEmployee(result[0]))
+				{
+					bar_String = new String[12];
+					StringBuffer checkString = new StringBuffer();
+					checkString.append(result[0]);
+					checkString.append(" ");
+					checkString.append(result[1]);
+					System.out.println("I am getEmployeeDetails: " + checkString.toString());
+					bar_String = sq.getEmployeeUN(checkString.toString());
+					sb = new StringBuffer();
+					for (int i=0;i<bar_String.length;i++)
+					{
+							sb.append(bar_String[i]);
+							sb.append(" "); 
+					}
+					String s2 = sb.toString();
+					client.sendToClient(s2);
+				}
+				break;
+			case "getTravellerDetails":
+				if (sq.canGetTraveller(result[0]))
+				{
+					//System.out.print(result[0]);
+					bar_String = new String[7];
+					bar_String = sq.getTravellerFromDB(result[0]);
+					sb = new StringBuffer();
+					for (int i=0;i<bar_String.length;i++)
+					{
+						sb.append(bar_String[i]);
+						sb.append(" ");
+					}
+					String sendMe = sb.toString();
+				//	System.out.print(sb4.toString());
+					client.sendToClient(sendMe);
+				}
 				break;
 			case "exit":
 				serverStopped();
@@ -132,91 +193,168 @@ public class EchoServer extends AbstractServer {
 			
 			case "setManagerDiscount":
 				boolean bool = sq.addManagerDiscount(result); // returns boolean <<<<<<<<<<<<<<<<<<<<<<<<
-				StringBuffer sb4 = new StringBuffer();
-				sb4.append("DiscountController"); // The name of the controller
-				sb4.append(" ");
-				sb4.append("setManagerDiscount");//The name of the method
-				sb4.append(" ");
-				sb4.append(bool);
-				client.sendToClient(sb4.toString()); // send the name of the controller called this method
+				sb = new StringBuffer();
+				sb.append("DiscountController"); // The name of the controller
+				sb.append(" ");
+				sb.append("setManagerDiscount");//The name of the method
+				sb.append(" ");
+				sb.append(bool);
+				client.sendToClient(sb.toString()); // send the name of the controller called this method
 				
 				break;
 				
 			case "ValidDiscount":
 				// result = [parkName, dateOfVisit]
 				String discount = sq.getManagerDiscount(result);
-				StringBuffer sb3 = new StringBuffer();
-				sb3.append("DiscountController"); // The name of the controller
-				sb3.append(" ");
-				sb3.append("ValidDiscount");//The name of the method
-				sb3.append(" ");
-				sb3.append(discount); // The discount row
-				sb3.append(" ");
-				sb3.append(result[1]);//dateOfVisit
-				client.sendToClient(sb3.toString());
+				sb = new StringBuffer();
+				sb.append("DiscountController"); // The name of the controller
+				sb.append(" ");
+				sb.append("ValidDiscount");//The name of the method
+				sb.append(" ");
+				sb.append(discount); // The discount row
+				sb.append(" ");
+				sb.append(result[1]);//dateOfVisit
+				client.sendToClient(sb.toString());
 				break;
 				
 			case "enterWaitingList":
 				// result = [parkName[0],dateOfVisit[1],hour[2],numOfVistors[3],orderNum[4]]
 				String orderNums = sq.findOrderToWaitFor(result);
-				StringBuffer sb5 = new StringBuffer();
-				sb5.append(result[4]);//orderNum to enter the DB
-				sb5.append(" ");
-				sb5.append(orderNums);
-				boolean addToWaitingList_flag = sq.addToWaitingList(sb5.toString());
+				sb = new StringBuffer();
+				sb.append(result[4]);//orderNum to enter the DB
+				sb.append(" ");
+				sb.append(orderNums);
+				boolean addToWaitingList_flag = sq.addToWaitingList(sb.toString());
 				
-				sb5 = new StringBuffer();
-				sb5.append("WaitingListController");//the name of the controller
-				sb5.append(" ");
-				sb5.append("enterWaitingList");//The name of the method
-				sb5.append(" ");
-				sb5.append(addToWaitingList_flag);
+				sb = new StringBuffer();
+				sb.append("WaitingListController");//the name of the controller
+				sb.append(" ");
+				sb.append("enterWaitingList");//The name of the method
+				sb.append(" ");
+				sb.append(addToWaitingList_flag);
 				
-				client.sendToClient(sb5.toString());
+				client.sendToClient(sb.toString());
 				break;
 				
 			case "sendMessageFirstWaitingList":
 				//result = [canceldOrderNum[0]]
 				String orderNum_firstInLine = sq.findOrderFirstInLine(result[0]);//canceldOrderNum
-				StringBuffer sb6 = new StringBuffer();
-				sb6.append("WaitingListController");//the name of the controller
-				sb6.append(" ");
-				sb6.append("sendMessageFirstWaitingList");//The name of the method
-				sb6.append(" ");
-				sb6.append(orderNum_firstInLine);
+				sb = new StringBuffer();
+				sb.append("WaitingListController");//the name of the controller
+				sb.append(" ");
+				sb.append("sendMessageFirstWaitingList");//The name of the method
+				sb.append(" ");
+				sb.append(orderNum_firstInLine);
 				
-				client.sendToClient(sb6.toString());
+				client.sendToClient(sb.toString());
 				break;
 				
 			case "removeFromWaitingList":
 				boolean bool2 = sq.removeFromWaitingList(result[0]);//Num Of orderToRemove
-				StringBuffer sb7 = new StringBuffer();
-				sb7.append("WaitingListController");//the name of the controller
-				sb7.append(" ");
-				sb7.append("removeFromWaitingList");//The name of the method
-				sb7.append(" ");
-				sb7.append(bool2);
+				sb = new StringBuffer();
+				sb.append("WaitingListController");//the name of the controller
+				sb.append(" ");
+				sb.append("removeFromWaitingList");//The name of the method
+				sb.append(" ");
+				sb.append(bool2);
 				
-				client.sendToClient(sb7.toString());
+				client.sendToClient(sb.toString());
 				break;
 				
 			case "removeAllwaiters":
 				sq.removeAllwaiters(result[0]);//Num Of orderToRemove_AllWaiters
-				StringBuffer sb8 = new StringBuffer();
-				sb8.append("WaitingListController");//the name of the controller
-				sb8.append(" ");
-				sb8.append("removeAllwaiters");//The name of the method
+				sb = new StringBuffer();
+				sb.append("WaitingListController");//the name of the controller
+				sb.append(" ");
+				sb.append("removeAllwaiters");//The name of the method
 				
-				client.sendToClient(sb8.toString());
+				client.sendToClient(sb.toString());
 				break;
 				
 				
-			default:
-				System.out.println("Sorry, don't know what you pressedsNow");
+			
 
-			}
-		} catch (Exception e) {
-			System.out.println("Erro");
+
+			
+				
+			/*
+			 * will check with the order table all the orders in the current date and time
+			 * return the number of visitors in all this orders
+			 * will compare the total number of visitors in park (from this orders)
+			 * with the number of visitors can enter to the wanted park,
+			 * if the sum of the desired visitors with the current visitors from the order greater then visitors can enter park
+			 * will return false to the order controller
+			 * AvailableVisitors= How many allowed every X hours in the park
+			 * currentVisitorsAtBoundry=How many visitors already will be in park in the gapTime
+			 */
+			case "canMakeOrder":
+				int currentVisitorsAtBoundry= sq.howManyForCurrentTimeAndDate(result);
+				int availableVisitors= sq.howManyAllowedInPark(result[2]);
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("canMakeOrder");
+				sb.append(" ");
+				sb.append(Integer.toString(currentVisitorsAtBoundry));
+				sb.append(" ");
+				sb.append(Integer.toString(availableVisitors));
+				client.sendToClient(sb.toString());
+				break;
+			/*
+			 * This case will check first what number the order id will be
+			 * Will insert into the Order table the new order got from client
+			 */
+			case "confirmOrder":
+				int orderNum = sq.nextOrder();
+				sq.addOrder(orderNum,result);
+				client.sendToClient(done);
+				break;
+				/*
+				 * This method will search for the order and delete it
+				 */
+			case "cancelOrder":
+				sq.cancelOrder(result);
+				client.sendToClient(done);
+				break;
+			case "getExsistingOrders":
+				String res1=sq.getOrders(result[0]);
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("getExsistingOrders");
+				sb.append(" ");
+				sb.append(res1);
+				client.sendToClient(sb.toString());
+				break;
+
+				
+			case "DetailsPark":
+				int currentVisitors=sq.howManyCurrentvisitorsForOrdersInPark(result[0]);
+				int unexpectedVisitors=sq.howManyUnexpectedVisitorsInPark(result[0]);
+				int maxAvailableVisitors=sq.howManyAllowedInPark(result[0]);
+				int maxVisitors=sq.howManyMaxvisitorsAllowedInPark(result[0]);
+				StringBuffer sb4= new StringBuffer();
+				sb4.append("ParkController");
+				sb4.append(" ");
+				sb4.append("DetailsPark");
+				sb4.append(" ");
+				sb4.append(Integer.toString(currentVisitors));
+				sb4.append(" ");
+				sb4.append(Integer.toString(unexpectedVisitors));
+				sb4.append(" ");
+				sb4.append(Integer.toString(maxAvailableVisitors));
+				sb4.append(" ");
+				sb4.append(Integer.toString(maxVisitors));
+				client.sendToClient(sb4.toString());
+				break;
+			
+			default:	
+				System.out.println("Sorry, don't know what you presse Now");
+			
+			}	
+		} catch(Exception e) {
+			System.out.println("Error");
+
 		}
 		
 
@@ -271,6 +409,7 @@ public class EchoServer extends AbstractServer {
 			System.out.println("VendorError: " + ex.getErrorCode());
 		}
 	}
+
 
 	/**
 	 * This method overrides the one in the superclass. Called when the server stops
