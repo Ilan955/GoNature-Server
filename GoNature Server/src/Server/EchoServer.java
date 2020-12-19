@@ -190,6 +190,90 @@ public class EchoServer extends AbstractServer {
 			case "exit":
 				serverStopped();
 				break;
+			
+			case "setManagerDiscount":
+				boolean bool = sq.addManagerDiscount(result); // returns boolean <<<<<<<<<<<<<<<<<<<<<<<<
+				sb = new StringBuffer();
+				sb.append("DiscountController"); // The name of the controller
+				sb.append(" ");
+				sb.append("setManagerDiscount");//The name of the method
+				sb.append(" ");
+				sb.append(bool);
+				client.sendToClient(sb.toString()); // send the name of the controller called this method
+				
+				break;
+				
+			case "ValidDiscount":
+				// result = [parkName, dateOfVisit]
+				String discount = sq.getManagerDiscount(result);
+				sb = new StringBuffer();
+				sb.append("DiscountController"); // The name of the controller
+				sb.append(" ");
+				sb.append("ValidDiscount");//The name of the method
+				sb.append(" ");
+				sb.append(discount); // The discount row
+				sb.append(" ");
+				sb.append(result[1]);//dateOfVisit
+				client.sendToClient(sb.toString());
+				break;
+				
+			case "enterWaitingList":
+				// result = [parkName[0],dateOfVisit[1],hour[2],numOfVistors[3],orderNum[4]]
+				String orderNums = sq.findOrderToWaitFor(result);
+				sb = new StringBuffer();
+				sb.append(result[4]);//orderNum to enter the DB
+				sb.append(" ");
+				sb.append(orderNums);
+				boolean addToWaitingList_flag = sq.addToWaitingList(sb.toString());
+				
+				sb = new StringBuffer();
+				sb.append("WaitingListController");//the name of the controller
+				sb.append(" ");
+				sb.append("enterWaitingList");//The name of the method
+				sb.append(" ");
+				sb.append(addToWaitingList_flag);
+				
+				client.sendToClient(sb.toString());
+				break;
+				
+			case "sendMessageFirstWaitingList":
+				//result = [canceldOrderNum[0]]
+				String orderNum_firstInLine = sq.findOrderFirstInLine(result[0]);//canceldOrderNum
+				sb = new StringBuffer();
+				sb.append("WaitingListController");//the name of the controller
+				sb.append(" ");
+				sb.append("sendMessageFirstWaitingList");//The name of the method
+				sb.append(" ");
+				sb.append(orderNum_firstInLine);
+				
+				client.sendToClient(sb.toString());
+				break;
+				
+			case "removeFromWaitingList":
+				boolean bool2 = sq.removeFromWaitingList(result[0]);//Num Of orderToRemove
+				sb = new StringBuffer();
+				sb.append("WaitingListController");//the name of the controller
+				sb.append(" ");
+				sb.append("removeFromWaitingList");//The name of the method
+				sb.append(" ");
+				sb.append(bool2);
+				
+				client.sendToClient(sb.toString());
+				break;
+				
+			case "removeAllwaiters":
+				sq.removeAllwaiters(result[0]);//Num Of orderToRemove_AllWaiters
+				sb = new StringBuffer();
+				sb.append("WaitingListController");//the name of the controller
+				sb.append(" ");
+				sb.append("removeAllwaiters");//The name of the method
+				
+				client.sendToClient(sb.toString());
+				break;
+				
+				
+			
+
 
 			
 				
@@ -272,6 +356,7 @@ public class EchoServer extends AbstractServer {
 			System.out.println("Error");
 
 		}
+		
 
 	}
 
@@ -314,7 +399,7 @@ public class EchoServer extends AbstractServer {
 		}
 
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "0774488811");
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
 
