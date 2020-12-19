@@ -222,7 +222,7 @@ public class sqlConnector {
 			ps.setString(4, result[1]);
 			ps.setString(2, result[3]);
 			ResultSet rs=ps.executeQuery();
-			
+			stm = conn.createStatement();
 			while(rs.next()) {
 				counter+=rs.getInt(1);
 				System.out.println(rs.getString(2));
@@ -386,6 +386,67 @@ public class sqlConnector {
 		s.append("Done");
 		
 		return s.toString();
+	}
+	
+	
+	public int howManyUnexpectedVisitorsInPark(String parkName) {
+		String res;
+		int unexpectedVisitors=0;
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE ParkName=?");
+			ps.setString(1, parkName);
+			stm = conn.createStatement();
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()) {
+			res=rs.getString(1);
+			unexpectedVisitors=Integer.parseInt(res);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		return unexpectedVisitors;
+	}
+	
+	public int howManyCurrentvisitorsForOrdersInPark(String parkName) {
+		String res;
+		int currentvisitors=0;
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT currentVisitors FROM project.park WHERE ParkName=?");
+			ps.setString(1, parkName);
+			stm = conn.createStatement();
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()) {
+			res=rs.getString(1);
+			currentvisitors=Integer.parseInt(res);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		return currentvisitors;
+	}
+	
+	public int howManyMaxvisitorsAllowedInPark(String parkName) {
+		String res;
+		int Maxvisitors=0;
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT maxVisitors FROM project.park WHERE ParkName=?");
+			ps.setString(1, parkName);
+			stm = conn.createStatement();
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()) {
+			res=rs.getString(1);
+			Maxvisitors=Integer.parseInt(res);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		return Maxvisitors;
 	}
 	
 

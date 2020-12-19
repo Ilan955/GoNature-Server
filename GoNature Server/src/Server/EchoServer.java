@@ -242,11 +242,35 @@ public class EchoServer extends AbstractServer {
 				sb.append(res1);
 				client.sendToClient(sb.toString());
 				break;
+
+				
+			case "DetailsPark":
+				int currentVisitors=sq.howManyCurrentvisitorsForOrdersInPark(result[0]);
+				int unexpectedVisitors=sq.howManyUnexpectedVisitorsInPark(result[0]);
+				int maxAvailableVisitors=sq.howManyAllowedInPark(result[0]);
+				int maxVisitors=sq.howManyMaxvisitorsAllowedInPark(result[0]);
+				StringBuffer sb4= new StringBuffer();
+				sb4.append("ParkController");
+				sb4.append(" ");
+				sb4.append("DetailsPark");
+				sb4.append(" ");
+				sb4.append(Integer.toString(currentVisitors));
+				sb4.append(" ");
+				sb4.append(Integer.toString(unexpectedVisitors));
+				sb4.append(" ");
+				sb4.append(Integer.toString(maxAvailableVisitors));
+				sb4.append(" ");
+				sb4.append(Integer.toString(maxVisitors));
+				client.sendToClient(sb4.toString());
+				break;
+			
 			default:	
-				System.out.println("Sorry, don't know what you pressedsNow");
-			}
-		} catch (Exception e) {
-			System.out.println("Erro");
+				System.out.println("Sorry, don't know what you presse Now");
+			
+			}	
+		} catch(Exception e) {
+			System.out.println("Error");
+
 		}
 
 	}
@@ -300,6 +324,7 @@ public class EchoServer extends AbstractServer {
 			System.out.println("VendorError: " + ex.getErrorCode());
 		}
 	}
+
 
 	/**
 	 * This method overrides the one in the superclass. Called when the server stops
