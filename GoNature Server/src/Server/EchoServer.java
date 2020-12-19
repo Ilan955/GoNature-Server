@@ -129,6 +129,88 @@ public class EchoServer extends AbstractServer {
 			case "exit":
 				serverStopped();
 				break;
+			
+			case "setManagerDiscount":
+				boolean bool = sq.addManagerDiscount(result); // returns boolean <<<<<<<<<<<<<<<<<<<<<<<<
+				StringBuffer sb4 = new StringBuffer();
+				sb4.append("DiscountController"); // The name of the controller
+				sb4.append(" ");
+				sb4.append("setManagerDiscount");//The name of the method
+				sb4.append(" ");
+				sb4.append(bool);
+				client.sendToClient(sb4.toString()); // send the name of the controller called this method
+				
+				break;
+				
+			case "ValidDiscount":
+				// result = [parkName, dateOfVisit]
+				String discount = sq.getManagerDiscount(result);
+				StringBuffer sb3 = new StringBuffer();
+				sb3.append("DiscountController"); // The name of the controller
+				sb3.append(" ");
+				sb3.append("ValidDiscount");//The name of the method
+				sb3.append(" ");
+				sb3.append(discount); // The discount row
+				sb3.append(" ");
+				sb3.append(result[1]);//dateOfVisit
+				client.sendToClient(sb3.toString());
+				break;
+				
+			case "enterWaitingList":
+				// result = [parkName[0],dateOfVisit[1],hour[2],numOfVistors[3],orderNum[4]]
+				String orderNums = sq.findOrderToWaitFor(result);
+				StringBuffer sb5 = new StringBuffer();
+				sb5.append(result[4]);//orderNum to enter the DB
+				sb5.append(" ");
+				sb5.append(orderNums);
+				boolean addToWaitingList_flag = sq.addToWaitingList(sb5.toString());
+				
+				sb5 = new StringBuffer();
+				sb5.append("WaitingListController");//the name of the controller
+				sb5.append(" ");
+				sb5.append("enterWaitingList");//The name of the method
+				sb5.append(" ");
+				sb5.append(addToWaitingList_flag);
+				
+				client.sendToClient(sb5.toString());
+				break;
+				
+			case "sendMessageFirstWaitingList":
+				//result = [canceldOrderNum[0]]
+				String orderNum_firstInLine = sq.findOrderFirstInLine(result[0]);//canceldOrderNum
+				StringBuffer sb6 = new StringBuffer();
+				sb6.append("WaitingListController");//the name of the controller
+				sb6.append(" ");
+				sb6.append("sendMessageFirstWaitingList");//The name of the method
+				sb6.append(" ");
+				sb6.append(orderNum_firstInLine);
+				
+				client.sendToClient(sb6.toString());
+				break;
+				
+			case "removeFromWaitingList":
+				boolean bool2 = sq.removeFromWaitingList(result[0]);//Num Of orderToRemove
+				StringBuffer sb7 = new StringBuffer();
+				sb7.append("WaitingListController");//the name of the controller
+				sb7.append(" ");
+				sb7.append("removeFromWaitingList");//The name of the method
+				sb7.append(" ");
+				sb7.append(bool2);
+				
+				client.sendToClient(sb7.toString());
+				break;
+				
+			case "removeAllwaiters":
+				sq.removeAllwaiters(result[0]);//Num Of orderToRemove_AllWaiters
+				StringBuffer sb8 = new StringBuffer();
+				sb8.append("WaitingListController");//the name of the controller
+				sb8.append(" ");
+				sb8.append("removeAllwaiters");//The name of the method
+				
+				client.sendToClient(sb8.toString());
+				break;
+				
+				
 			default:
 				System.out.println("Sorry, don't know what you pressedsNow");
 
@@ -136,6 +218,7 @@ public class EchoServer extends AbstractServer {
 		} catch (Exception e) {
 			System.out.println("Erro");
 		}
+		
 
 	}
 
@@ -178,7 +261,7 @@ public class EchoServer extends AbstractServer {
 		}
 
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "0774488811");
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
 
