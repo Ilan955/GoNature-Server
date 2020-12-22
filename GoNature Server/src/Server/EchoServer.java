@@ -76,12 +76,7 @@ public class EchoServer extends AbstractServer {
  *    	every time the first place in the string array will tell what type of method to triger.
  *     
  */
-
-		
 		String[] bar_String;
-		
-
-      
 		String done = "Done";
 		int flag=0;
 		String st = (String)msg;
@@ -158,7 +153,7 @@ public class EchoServer extends AbstractServer {
 					checkString.append(result[0]);
 					checkString.append(" ");
 					checkString.append(result[1]);
-					System.out.println("I am getEmployeeDetails: " + checkString.toString());
+					//System.out.println("I am getEmployeeDetails: " + checkString.toString());
 					bar_String = sq.getEmployeeUN(checkString.toString());
 					sb = new StringBuffer();
 					for (int i=0;i<bar_String.length;i++)
@@ -174,7 +169,7 @@ public class EchoServer extends AbstractServer {
 				if (sq.canGetTraveller(result[0]))
 				{
 					//System.out.print(result[0]);
-					bar_String = new String[7];
+					bar_String = new String[11];
 					bar_String = sq.getTravellerFromDB(result[0]);
 					sb = new StringBuffer();
 					for (int i=0;i<bar_String.length;i++)
@@ -333,19 +328,19 @@ public class EchoServer extends AbstractServer {
 				int unexpectedVisitors=sq.howManyUnexpectedVisitorsInPark(result[0]);
 				int maxAvailableVisitors=sq.howManyAllowedInPark(result[0]);
 				int maxVisitors=sq.howManyMaxvisitorsAllowedInPark(result[0]);
-				StringBuffer sb4= new StringBuffer();
-				sb4.append("ParkController");
-				sb4.append(" ");
-				sb4.append("DetailsPark");
-				sb4.append(" ");
-				sb4.append(Integer.toString(currentVisitors));
-				sb4.append(" ");
-				sb4.append(Integer.toString(unexpectedVisitors));
-				sb4.append(" ");
-				sb4.append(Integer.toString(maxAvailableVisitors));
-				sb4.append(" ");
-				sb4.append(Integer.toString(maxVisitors));
-				client.sendToClient(sb4.toString());
+				sb= new StringBuffer();
+				sb.append("ParkController");
+				sb.append(" ");
+				sb.append("DetailsPark");
+				sb.append(" ");
+				sb.append(Integer.toString(currentVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(unexpectedVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(maxAvailableVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(maxVisitors));
+				client.sendToClient(sb.toString());
 				break;
 			
 			default:	
@@ -399,7 +394,7 @@ public class EchoServer extends AbstractServer {
 		}
 
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "0774488811");
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
 
