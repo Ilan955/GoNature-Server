@@ -4,5 +4,6 @@
 	<classpathentry excluding="GUI/PortController.java|Controller/|GUI/" kind="src" path="src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OCSF1"/>
 	<classpathentry kind="lib" path="lib/mysql-connector-java-8.0.13.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Logic"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

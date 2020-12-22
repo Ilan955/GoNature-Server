@@ -76,18 +76,22 @@ public class EchoServer extends AbstractServer {
 		 * 
 		 */
 
+		String[] bar_String;
+
+		String done = "Done";
 		int flag = 0;
-		Boolean res;
 		String st = (String) msg;
 		String[] user = null;
 		String action = getAction(st);
 		String[] result = DecrypteMassege(st);
+		StringBuffer sb;
 		try {
+			boolean res;
 			switch (action) {
 
 			case "submitVisitor":
 				user = sq.CheckForId(result[0]);
-				StringBuffer sb = new StringBuffer();
+				sb = new StringBuffer();
 				for (int i = 0; i < user.length; i++) {
 					sb.append(user[i]);
 					sb.append(" ");
@@ -96,8 +100,8 @@ public class EchoServer extends AbstractServer {
 				String str = sb.toString();
 				client.sendToClient(str);
 				break;
+				
 			case "updateVisitor":
-
 				if (sq.updateEmail(result)) {
 					user = sq.CheckForId(result[0]);
 					StringBuffer sb1 = new StringBuffer();
@@ -109,6 +113,7 @@ public class EchoServer extends AbstractServer {
 					client.sendToClient(str2);
 				}
 				break;
+				
 			case "connectivity":
 				StringBuffer sb2 = new StringBuffer();
 				sb2.append(getPort());
@@ -118,19 +123,29 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(s);
 				break;
 				
-			case "exists":
-				res=sq.exists(result);
-				client.sendToClient(res);
+			//////////////////////// NEW UPDATES ////////////////////////////////
+			case "isMemberExists":
+				res = sq.isMemberExists(result);
+				StringBuffer sb3 = new StringBuffer();
+				sb3.append("SignUpController");
+				sb3.append(" ");
+				sb3.append("isMemberExists");
+				sb3.append(" ");
+				sb3.append(res);
+				client.sendToClient(sb3.toString());
 				break;
+
 			case "addMember":
-				res=sq.exists(result);
-				client.sendToClient(res);
+				res = sq.addMember(result);
+				client.sendToClient("Done");
 				break;
+				
 			case "exit":
 				serverStopped();
 				break;
+				
 			default:
-				System.out.println("Sorry, don't know what you pressedsNow");
+				System.out.println("Sorry, don't know what you presseds Now");
 
 			}
 		} catch (Exception e) {

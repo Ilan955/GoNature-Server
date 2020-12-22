@@ -58,21 +58,23 @@ public class sqlConnector {
 		}
 
 	}
+	//////////////////////// NEW UPDATES ////////////////////////////////
 
-	public boolean exists(String[] msg) {
+	public boolean isMemberExists(String[] msg) {
 		Statement stm;
+		System.out.println("is member exists?");
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE ID=?");
 			stm = conn.createStatement();
 			ps.setString(1, msg[0]);
 			ResultSet rs = ps.executeQuery();
-
 			if (rs.next()) {
 				return false;
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
+			return false;
+
 		}
 		return true;
 	}
@@ -82,7 +84,7 @@ public class sqlConnector {
 		String memberCNT = String.valueOf(nextMember());
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"INSERT project.person SET ID=? firstName=? lastName=? phoneNumber=? Email=? creditCardNum=? maxFamilyMembers=? memberId=?");
+					"INSERT project.person SET ID=? ,firstName=?, lastName=?, phoneNumber=? ,Email=? ,creditCardNum=? ,maxFamilyMembers=? ,memberId=?");
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.setString(3, msg[2]);
@@ -91,34 +93,31 @@ public class sqlConnector {
 			ps.setString(6, msg[5]);
 			ps.setString(7, msg[6]);
 			ps.setString(8, memberCNT);
-
 			ps.executeUpdate();
-			System.out.println("opale");
 			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
 		}
-		
 
 	}
-	
+
 	public int nextMember() {
 		Statement stm;
-		int i=0;
-	try {
-		PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person");
-		stm = conn.createStatement();
-		ResultSet rs = ps.executeQuery();
+		int i = 0;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person");
+			stm = conn.createStatement();
+			ResultSet rs = ps.executeQuery();
 
-		while (rs.next()) {
-			i++;
+			while (rs.next()) {
+				i++;
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
-
-	} catch (SQLException e) {
-		e.printStackTrace();
+		i = i / 9;
+		return i++;
 	}
-	i= i/9;
-	return i++;
-}
 }
