@@ -397,6 +397,7 @@ public class sqlConnector {
 			e.printStackTrace();
 		}
 	}
+
 	/*
 	 * will check the amount of orders that is in the system
 	 * 
@@ -505,7 +506,7 @@ public class sqlConnector {
 	}
 
 	/*Method to insert new order to table
-	 * res[0]=time res[1]=date, res[2]= parkname , res[3]=price, res[4]=id, res[5]=type, res[6]=numOfVisit
+	 * res[0]=time res[1]=date, res[2]= parkname , res[3]=price, res[4]=id, res[5]=type, res[6]=numOfVisit, res[7] = "confirmed"
 	 * 
 	 */
 	
@@ -516,7 +517,7 @@ public class sqlConnector {
 		
 		
 		try {
-			PreparedStatement ps = conn.prepareStatement("INSERT INTO gonaturedb.order (orderNum, TimeInPark, DateOfVisit, wantedPark, TotalPrice, ID,type,numOfVisitors) VALUES (?,?,?,?,?,?,?,?)");
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO gonaturedb.order (orderNum, TimeInPark, DateOfVisit, wantedPark, TotalPrice, ID,type,numOfVisitors,status) VALUES (?,?,?,?,?,?,?,?,?)");
 			ps.setInt(1, orderNum);
 			ps.setString(2, result[0]);
 			ps.setDate(3, wanted);
@@ -525,7 +526,7 @@ public class sqlConnector {
 			ps.setString(6, result[4]);
 			ps.setString(7, result[5]);
 			ps.setString(8, result[6]);
-			
+			ps.setString(9, result[7]);
 			ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -577,7 +578,7 @@ public class sqlConnector {
 		Statement stm;
 
 		try {
-			PreparedStatement ps = conn.prepareStatement("DELETE FROM gonaturedb.order WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+			PreparedStatement ps = conn.prepareStatement("UPDATE gonaturedb.order SET status='Cancelled' WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
 			ps.setString(1, result[0]);
 			ps.setString(2, result[1]);
 			ps.setString(3, result[2]);
@@ -595,17 +596,24 @@ public class sqlConnector {
 
 	public String getOrders(String iD) {
 		Statement stm;
+		String tmp;
 		StringBuffer s= new StringBuffer();
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice FROM gonaturedb.order WHERE ID=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice,status FROM gonaturedb.order WHERE ID=?");
 			ps.setString(1, iD);
 			ResultSet rs=ps.executeQuery();
 			while(rs.next()) {
-				for(int i=1;i<=6;i++)
-				{
-					s.append(rs.getString(i));
-					s.append(" ");
-				}
+				 tmp=rs.getString(7);
+				 if(!tmp.equals("Cancelled")) {
+					 for(int i=1;i<=6;i++)
+						{
+							s.append(rs.getString(i));
+							s.append(" ");
+						}
+				 }
+				
+				
+					
 				
 			}
 		} catch (SQLException e) {

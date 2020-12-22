@@ -394,7 +394,9 @@ public class EchoServer extends AbstractServer {
 		}
 
 		try {
+
 			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
+
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
 
@@ -405,6 +407,7 @@ public class EchoServer extends AbstractServer {
 		}
 	}
 
+	
 
 	/**
 	 * This method overrides the one in the superclass. Called when the server stops
