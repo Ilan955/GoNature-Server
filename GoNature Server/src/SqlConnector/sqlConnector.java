@@ -67,22 +67,24 @@ public class sqlConnector {
 		}
 
 	}
+	//////////////////////// NEW UPDATES ////////////////////////////////
 
-	public boolean exists(String[] msg) {
+	public boolean isMemberExists(String[] msg) {
 		Statement stm;
+		System.out.println("is member exists?");
 		try {
 
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE ID=?");
 			stm = conn.createStatement();
 			ps.setString(1, msg[0]);
 			ResultSet rs = ps.executeQuery();
-
 			if (rs.next()) {
 				return false;
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
+			return false;
+
 		}
 		return true;
 	}
@@ -119,7 +121,8 @@ public class sqlConnector {
 		try {
 			PreparedStatement ps = conn.prepareStatement(
 
-					"INSERT project.person SET ID=?, firstName=?, lastName=?, phoneNumber=?, Email=?, creditCardNum=? ,maxFamilyMembers=? ,memberId=?");
+					"INSERT project.person SET ID=? ,firstName=?, lastName=?, phoneNumber=? ,Email=? ,creditCardNum=? ,maxFamilyMembers=? ,memberId=?");
+
 
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
@@ -129,14 +132,13 @@ public class sqlConnector {
 			ps.setString(6, msg[5]);
 			ps.setString(7, msg[6]);
 			ps.setString(8, memberCNT);
-
 			ps.executeUpdate();
-			System.out.println("opale");
 			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
 		}
+
 	}
 
 	public int nextMember() {
@@ -396,12 +398,6 @@ public class sqlConnector {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-	
-		
-	
-}//class
-
 
 	/*
 	 * will check the amount of orders that is in the system
@@ -423,9 +419,14 @@ public class sqlConnector {
 		}
 		
 
-	} catch (SQLException e) {
-		e.printStackTrace();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		i = i / 9;
+		return i++;
 	}
+
 	
 	return ++i;
 	}
@@ -543,9 +544,10 @@ public class sqlConnector {
 	public boolean canGetEmployee(String userName) { //method checks if employee exists on our DB (By UserName)
 		Statement stm;
 		try {
+			String[] s = userName.split(" "); // new row
 			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.employees WHERE userName = ?");
 			stm = conn.createStatement();
-			ps.setString(1, userName);
+			ps.setString(1, s[0]);// new row
 			ps.executeQuery();
 			return true;
 		}catch (SQLException e) {e.printStackTrace();
@@ -577,46 +579,6 @@ public class sqlConnector {
 		}catch(SQLException e) {e.printStackTrace();}
 		return s;
 	}
-	public boolean canGetTraveller(String travellerID) //Checks if traveller exists in our DB (By ID)
-	{
-		Statement stm;
-		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.traveller WHERE ID = ? OR MemberID = ?");
-			ps.setString(1, travellerID);
-			ps.setString(2,  travellerID);
-			ps.executeQuery();
-			return true;
-		}catch (SQLException e) {e.printStackTrace();
-									return false;
-		}
-	}
-	public String[] getTravellerFromDB(String travellerID) //returns a String[] with this traveller info 
-	{
-		int flag = 0;
-		Statement stm;
-		String[] s = new String[7]; //should be as number fields number in traveller class
-		//I am working currently on a DB with 5 fields for traveller. It works
-		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.traveller WHERE ID=? OR MemberID = ?");
-			stm = conn.createStatement();
-			ps.setString(1, travellerID);
-			ps.setString(2, travellerID);
-			ResultSet rs = ps.executeQuery();
-			s[0] = "UserController"; //for use of GoClient.HandleMessageFromServer
-			s[1] = "IdentifyTraveller";
-			while(rs.next())
-				for (int i=2;i<7;i++)
-					s[i] = rs.getString(i-1);
-					//System.out.print(rs.getString(i).toString());
-			if (s[2] == null)
-			{
-				s[1] = "IdentifyNotExistingTraveller";
-			}
-		}catch(SQLException e) {e.printStackTrace();}
-		return s;
-	}
-
-	
 
 	public void cancelOrder(String[] result) {
 		Statement stm;
@@ -722,6 +684,58 @@ public class sqlConnector {
 		}
 		return Maxvisitors;
 	}
+	public String[] getTravellerFromDB(String travellerID) //returns a String[] with this traveller info 
+	{
+		int temp = 0;
+		Statement stm;
+		String[] s = new String[11]; //should be as number fields number in traveller class
+		//I am working currently on a DB with 5 fields for traveller. It works
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE id = ? OR memberID = ?");
+			stm = conn.createStatement();
+			ps.setString(1, travellerID);
+			ps.setString(2, travellerID);
+			ResultSet rs = ps.executeQuery();
+			s[0] = "UserController"; //for use of GoClient.HandleMessageFromServer
+			s[1] = "IdentifyTraveller";
+			while(rs.next())
+			{
+				s[2] = rs.getString(1);
+				s[3] = rs.getString(2);
+				s[4] = rs.getString(3);
+				s[5] = rs.getString(4);
+				s[6] = rs.getString(5);
+				s[7] = rs.getString(6);
+				s[8] = rs.getString(7);
+				s[9] = null;
+				temp = rs.getInt(8);
+				s[10] = rs.getString(9);
+			}
+			s[9] = ("" + temp);
+			if (s[5] == null)
+			{
+				s[1] = "IdentifyNotExistingTraveller";
+			}
+					//System.out.print(rs.getString(i).toString());
+		}catch(SQLException e) {e.printStackTrace();}
+		return s;
+	}
+		public boolean canGetTraveller(String travellerID) //Checks if traveller exists in our DB (By ID)
+	{
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.person WHERE id = ? OR memberID = ?");
+		//	stm = conn.createStatement();
+			ps.setString(1, travellerID);
+			ps.setString(2,  travellerID);
+			ps.executeQuery();
+			return true;
+		}catch (SQLException e) {e.printStackTrace();
+									return false;
+		}
+	}
+	
+	
 
 	public float howmanyTimeEveryVisitorInPark(String parkName) {
 		String res;
@@ -778,3 +792,5 @@ public class sqlConnector {
 	}
 
 }
+
+

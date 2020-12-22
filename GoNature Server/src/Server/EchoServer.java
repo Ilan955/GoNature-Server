@@ -69,14 +69,15 @@ public class EchoServer extends AbstractServer {
 
 	public void handleMessageFromClient(Object msg, ConnectionToClient client) {
 
-		/*
-		 * 
-		 * will decrypte what type of action the server need to do using switch case to
-		 * simplify the actions the server will make every time the first place in the
-		 * string array will tell what type of method to triger.
-		 * 
-		 */
 
+
+/*
+ *       
+ *       will decrypte what type of action the server need to do
+ *       using switch case to simplify the actions the server will make
+ *    	every time the first place in the string array will tell what type of method to triger.
+ *     
+ */
 		String[] bar_String;
 
 		String done = "Done";
@@ -88,7 +89,9 @@ public class EchoServer extends AbstractServer {
 
 		StringBuffer sb;
 
+
 		try {
+			boolean res;
 			switch (action) {
 
 			case "submitVisitor":
@@ -100,12 +103,21 @@ public class EchoServer extends AbstractServer {
 					sb.append(" ");
 				}
 
-				String str = sb.toString();
-				client.sendToClient(str);
+
+
+				 sb = new StringBuffer();
+			    for(int i = 0; i < user.length; i++) {
+			         sb.append(user[i]);
+			         sb.append(" ");
+			      }
+			    
+			      String str = sb.toString();
+			      client.sendToClient(str);
+
 
 				break;
+				
 			case "updateVisitor":
-
 				if (sq.updateEmail(result)) {
 					user = sq.CheckForId(result[0]);
 
@@ -118,6 +130,7 @@ public class EchoServer extends AbstractServer {
 					client.sendToClient(str2);
 				}
 				break;
+				
 			case "connectivity":
 
 				sb = new StringBuffer();
@@ -125,7 +138,26 @@ public class EchoServer extends AbstractServer {
 				sb.append(" ");
 				sb.append(client);
 				String s = sb.toString();
-				client.sendToClient(s);
+
+				 client.sendToClient(s);
+				
+
+			//////////////////////// NEW UPDATES ////////////////////////////////
+			case "isMemberExists":
+				res = sq.isMemberExists(result);
+				StringBuffer sb3 = new StringBuffer();
+				sb3.append("SignUpController");
+				sb3.append(" ");
+				sb3.append("isMemberExists");
+				sb3.append(" ");
+				sb3.append(res);
+				client.sendToClient(sb3.toString());
+				break;
+
+			case "addMember":
+				res = sq.addMember(result);
+				client.sendToClient("Done");
+
 
 			case "exists":
 				boolean res;
@@ -152,7 +184,7 @@ public class EchoServer extends AbstractServer {
 					checkString.append(result[0]);
 					checkString.append(" ");
 					checkString.append(result[1]);
-					System.out.println("I am getEmployeeDetails: " + checkString.toString());
+					//System.out.println("I am getEmployeeDetails: " + checkString.toString());
 					bar_String = sq.getEmployeeUN(checkString.toString());
 					sb = new StringBuffer();
 					for (int i = 0; i < bar_String.length; i++) {
@@ -164,9 +196,12 @@ public class EchoServer extends AbstractServer {
 				}
 				break;
 			case "getTravellerDetails":
-				if (sq.canGetTraveller(result[0])) {
-					// System.out.print(result[0]);
-					bar_String = new String[7];
+
+				if (sq.canGetTraveller(result[0]))
+				{
+					//System.out.print(result[0]);
+					bar_String = new String[11];
+
 					bar_String = sq.getTravellerFromDB(result[0]);
 					sb = new StringBuffer();
 					for (int i = 0; i < bar_String.length; i++) {
@@ -177,10 +212,13 @@ public class EchoServer extends AbstractServer {
 					// System.out.print(sb4.toString());
 					client.sendToClient(sendMe);
 				}
+
 				break;
+				
 			case "exit":
 				serverStopped();
 				break;
+
 
 			case "setManagerDiscount":
 				boolean bool = sq.addManagerDiscount(result); // returns boolean <<<<<<<<<<<<<<<<<<<<<<<<
@@ -313,31 +351,25 @@ public class EchoServer extends AbstractServer {
 				break;
 
 			case "DetailsPark":
-				int currentVisitors = sq.howManyCurrentvisitorsForOrdersInPark(result[0]);
-				int unexpectedVisitors = sq.howManyUnexpectedVisitorsInPark(result[0]);
-				int maxAvailableVisitors = sq.howManyAllowedInPark(result[0]);
-				int maxVisitors = sq.howManyMaxvisitorsAllowedInPark(result[0]);
-				float timeInPark = sq.howmanyTimeEveryVisitorInPark(result[0]);
-				StringBuffer sb1 = new StringBuffer();
-				sb1.append("ParkController");
-				sb1.append(" ");
-				sb1.append("DetailsPark");
-				sb1.append(" ");
-				sb1.append(Integer.toString(currentVisitors));
-				sb1.append(" ");
-				sb1.append(Integer.toString(unexpectedVisitors));
-				sb1.append(" ");
-				sb1.append(Integer.toString(maxAvailableVisitors));
-				sb1.append(" ");
-				sb1.append(Integer.toString(maxVisitors));
-				sb1.append(" ");
-				sb1.append(Float.toString(timeInPark));
-				client.sendToClient(sb1.toString());
-				break;
 
-			case "setNumOfVisitorEntringPark":
-				sq.updateUnexpectedVisitors(result);
-				client.sendToClient(done);
+				int currentVisitors=sq.howManyCurrentvisitorsForOrdersInPark(result[0]);
+				int unexpectedVisitors=sq.howManyUnexpectedVisitorsInPark(result[0]);
+				int maxAvailableVisitors=sq.howManyAllowedInPark(result[0]);
+				int maxVisitors=sq.howManyMaxvisitorsAllowedInPark(result[0]);
+				sb= new StringBuffer();
+				sb.append("ParkController");
+				sb.append(" ");
+				sb.append("DetailsPark");
+				sb.append(" ");
+				sb.append(Integer.toString(currentVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(unexpectedVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(maxAvailableVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(maxVisitors));
+				client.sendToClient(sb.toString());
+
 				break;
 
 			case "enterWithoutOrder":
@@ -350,6 +382,7 @@ public class EchoServer extends AbstractServer {
 			}
 		} catch (Exception e) {
 			System.out.println("Error");
+
 
 		}
 
@@ -394,7 +427,9 @@ public class EchoServer extends AbstractServer {
 		}
 
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root","root");
+
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
+
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
 
