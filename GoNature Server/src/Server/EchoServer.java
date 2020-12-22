@@ -76,12 +76,7 @@ public class EchoServer extends AbstractServer {
  *    	every time the first place in the string array will tell what type of method to triger.
  *     
  */
-
-		
 		String[] bar_String;
-		
-
-      
 		String done = "Done";
 		int flag=0;
 		String st = (String)msg;
@@ -158,7 +153,7 @@ public class EchoServer extends AbstractServer {
 					checkString.append(result[0]);
 					checkString.append(" ");
 					checkString.append(result[1]);
-					System.out.println("I am getEmployeeDetails: " + checkString.toString());
+					//System.out.println("I am getEmployeeDetails: " + checkString.toString());
 					bar_String = sq.getEmployeeUN(checkString.toString());
 					sb = new StringBuffer();
 					for (int i=0;i<bar_String.length;i++)
@@ -174,7 +169,7 @@ public class EchoServer extends AbstractServer {
 				if (sq.canGetTraveller(result[0]))
 				{
 					//System.out.print(result[0]);
-					bar_String = new String[7];
+					bar_String = new String[11];
 					bar_String = sq.getTravellerFromDB(result[0]);
 					sb = new StringBuffer();
 					for (int i=0;i<bar_String.length;i++)
@@ -399,7 +394,9 @@ public class EchoServer extends AbstractServer {
 		}
 
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/gonaturedb?serverTimezone=IST", "root", "");
+
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
+
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
 
