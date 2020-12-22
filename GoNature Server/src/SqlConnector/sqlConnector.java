@@ -397,14 +397,12 @@ public class sqlConnector {
 			e.printStackTrace();
 		}
 		
-	}
+	
 		
 	
 }//class
 
-	
-	return i;
-}
+
 	/*
 	 * will check the amount of orders that is in the system
 	 * 
@@ -467,7 +465,7 @@ public class sqlConnector {
 		int counter=0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT maxAvailableVisitors FROM gonaturedb.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE ParkName=?");
 			ps.setString(1, parkName);
 			
 			ResultSet rs=ps.executeQuery();
@@ -723,6 +721,60 @@ public class sqlConnector {
 			
 		}
 		return Maxvisitors;
+	}
+
+	public float howmanyTimeEveryVisitorInPark(String parkName) {
+		String res;
+		float time=0;
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park WHERE ParkName=?");
+			ps.setString(1, parkName);
+			stm = conn.createStatement();
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()) {
+			res=rs.getString(1);
+			time=Float.parseFloat(res);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			
+		}
+		return time;
+	}
+	
+	public void updateUnexpectedVisitors(String[]msg) {
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE ParkName=?");
+			ps.setString(1, msg[0]);
+			ps.setString(2, msg[1]);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	public void insertTravellerInPark(String[] result) {
+		Statement stm;
+		LocalDate wanted1 = LocalDate.parse(result[2]);
+		Date wanted=java.sql.Date.valueOf(wanted1);
+		
+		try {
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO project.travellerInPark(ID,numOfVisitors,Date,enterTime,exitTime,price,wantedPark) VALUES (?,?,?,?,null,?,?)");
+			ps.setString(1, result[0]); //ID	
+			ps.setString(2, result[1]); //numberOfVisitors
+			ps.setDate(3, wanted);   //Date
+			ps.setString(4, result[3]); //time
+			ps.setFloat(5, Float.parseFloat(result[4]));
+			ps.setString(6, result[5]);	
+			ps.execute();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		
+		}
+		
+		
 	}
 
 }
