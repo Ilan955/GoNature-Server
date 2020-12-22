@@ -69,6 +69,7 @@ public class EchoServer extends AbstractServer {
 
 	public void handleMessageFromClient(Object msg, ConnectionToClient client) {
 
+
 /*
  *       
  *       will decrypte what type of action the server need to do
@@ -87,11 +88,20 @@ public class EchoServer extends AbstractServer {
 		StringBuffer sb;
 
 
+
 		try {
+			boolean res;
 			switch (action) {
 
 			case "submitVisitor":
 				user = sq.CheckForId(result[0]);
+
+				sb = new StringBuffer();
+				for (int i = 0; i < user.length; i++) {
+					sb.append(user[i]);
+					sb.append(" ");
+				}
+
 
 				 sb = new StringBuffer();
 			    for(int i = 0; i < user.length; i++) {
@@ -103,8 +113,8 @@ public class EchoServer extends AbstractServer {
 			      client.sendToClient(str);
 
 				break;
+				
 			case "updateVisitor":
-
 				if (sq.updateEmail(result)) {
 					user = sq.CheckForId(result[0]);
 
@@ -117,6 +127,7 @@ public class EchoServer extends AbstractServer {
 				      client.sendToClient(str2);
 				}
 				break;
+				
 			case "connectivity":
 
 				sb = new StringBuffer();
@@ -126,6 +137,23 @@ public class EchoServer extends AbstractServer {
 				String s = sb.toString();
 				 client.sendToClient(s);
 				
+
+			//////////////////////// NEW UPDATES ////////////////////////////////
+			case "isMemberExists":
+				res = sq.isMemberExists(result);
+				StringBuffer sb3 = new StringBuffer();
+				sb3.append("SignUpController");
+				sb3.append(" ");
+				sb3.append("isMemberExists");
+				sb3.append(" ");
+				sb3.append(res);
+				client.sendToClient(sb3.toString());
+				break;
+
+			case "addMember":
+				res = sq.addMember(result);
+				client.sendToClient("Done");
+
 			case "exists":
 				boolean res;
 				res=sq.exists(result);
@@ -181,10 +209,13 @@ public class EchoServer extends AbstractServer {
 				//	System.out.print(sb4.toString());
 					client.sendToClient(sendMe);
 				}
+
 				break;
+				
 			case "exit":
 				serverStopped();
 				break;
+
 			
 			case "setManagerDiscount":
 				boolean bool = sq.addManagerDiscount(result); // returns boolean <<<<<<<<<<<<<<<<<<<<<<<<
@@ -349,6 +380,7 @@ public class EchoServer extends AbstractServer {
 			}	
 		} catch(Exception e) {
 			System.out.println("Error");
+
 
 		}
 		
