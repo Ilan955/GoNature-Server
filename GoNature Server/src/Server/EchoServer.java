@@ -333,19 +333,19 @@ public class EchoServer extends AbstractServer {
 				int unexpectedVisitors=sq.howManyUnexpectedVisitorsInPark(result[0]);
 				int maxAvailableVisitors=sq.howManyAllowedInPark(result[0]);
 				int maxVisitors=sq.howManyMaxvisitorsAllowedInPark(result[0]);
-				StringBuffer sb4= new StringBuffer();
-				sb4.append("ParkController");
-				sb4.append(" ");
-				sb4.append("DetailsPark");
-				sb4.append(" ");
-				sb4.append(Integer.toString(currentVisitors));
-				sb4.append(" ");
-				sb4.append(Integer.toString(unexpectedVisitors));
-				sb4.append(" ");
-				sb4.append(Integer.toString(maxAvailableVisitors));
-				sb4.append(" ");
-				sb4.append(Integer.toString(maxVisitors));
-				client.sendToClient(sb4.toString());
+				sb= new StringBuffer();
+				sb.append("ParkController");
+				sb.append(" ");
+				sb.append("DetailsPark");
+				sb.append(" ");
+				sb.append(Integer.toString(currentVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(unexpectedVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(maxAvailableVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(maxVisitors));
+				client.sendToClient(sb.toString());
 				break;
 			
 			default:	
@@ -399,7 +399,7 @@ public class EchoServer extends AbstractServer {
 		}
 
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "0774488811");
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/gonaturedb?serverTimezone=IST", "root", "");
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
 
@@ -410,6 +410,7 @@ public class EchoServer extends AbstractServer {
 		}
 	}
 
+	
 
 	/**
 	 * This method overrides the one in the superclass. Called when the server stops
