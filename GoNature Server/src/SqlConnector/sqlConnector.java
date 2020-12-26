@@ -192,7 +192,7 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			/* get park maxDuration time */
-			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park where ParkName = ?;");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park where parkName = ?;");
 			ps.setString(1, result[0]);// parkName
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -458,8 +458,10 @@ public class sqlConnector {
 		int counter = 0;
 		Statement stm;
 		try {
+
 			PreparedStatement ps = conn
 					.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE ParkName=?");
+
 			ps.setString(1, parkName);
 
 			ResultSet rs = ps.executeQuery();
@@ -626,8 +628,10 @@ public class sqlConnector {
 		int unexpectedVisitors = 0;
 		Statement stm;
 		try {
+
 			PreparedStatement ps = conn
 					.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE ParkName=?");
+
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -647,7 +651,7 @@ public class sqlConnector {
 		int currentvisitors = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT currentVisitors FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT currentVisitors FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -667,7 +671,7 @@ public class sqlConnector {
 		int Maxvisitors = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT maxVisitors FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxVisitors FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -740,7 +744,7 @@ public class sqlConnector {
 		float time = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -758,8 +762,10 @@ public class sqlConnector {
 	public void updateUnexpectedVisitors(String[] msg) {
 		Statement stm;
 		try {
+
 			PreparedStatement ps = conn
 					.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE ParkName=?");
+
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.executeUpdate();
