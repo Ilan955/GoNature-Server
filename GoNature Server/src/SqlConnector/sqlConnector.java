@@ -767,6 +767,88 @@ public class sqlConnector {
 			e.printStackTrace();
 		}
 	}
+	
+	
+	
+	
+	public void insertRequest(String[] result) {
+		Statement stm;
+		LocalDate wanted1 = LocalDate.parse(result[1]);
+		Date wanted = java.sql.Date.valueOf(wanted1);
+
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"INSERT INTO project.requests(IdOfAsks,dateOfRequest,timeOfRequest,wantedpark,numberOfVisitors,type,status) VALUES (?,?,?,?,?,?,-1)");
+			ps.setString(1, result[0]); // ID
+			ps.setDate(2, wanted); // Date
+			ps.setString(3, result[2]); // park
+			ps.setString(4, result[3]); // numOfVisitors
+			ps.setString(5, result[4]); // time
+			ps.setString(6, result[5]); // type
+			ps.execute();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+	public int IsApproveEnterParkForTraveller(String[] result)
+	{
+		String res;
+		int status = -1;
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT status FROM project.requests WHERE idOfAsks=? AND type=? ");
+			ps.setString(1, result[0]); //ID
+			ps.setString(2, result[1]); //type
+			stm = conn.createStatement();
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				res = rs.getString(1);
+				status = Integer.parseInt(res);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+
+		}
+		return status;
+	}
+	public String getRequestTableOfEnterPark(String park) {
+		Statement stm;
+		StringBuffer s = new StringBuffer();
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT IdOfAsks,timeOfRequest,numberOfVisitors FROM project.requests WHERE wantedpark=? and dateOfRequest=curdate() and type=\"EnterPark\" and status=\"-1\" ORDER BY timeOfRequest ASC");
+			ps.setString(1, park);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				for (int i = 1; i <= 3; i++) {
+					s.append(rs.getString(i));
+					s.append(" ");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+
+		}
+		s.append("Done");
+
+		return s.toString();
+	}
+	public void changeRequestStatusForCasualTraveller(String[] msg) {
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("UPDATE project.requests SET status=? WHERE IdOfAsks=? AND wantedpark=? and dateOfRequest=curdate() and type=\"EnterPark\"");
+			ps.setString(1, msg[0]); //status
+			ps.setString(2, msg[1]); //ID
+			ps.setString(3, msg[2]); //park
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+	
 
 	public void insertTravellerInPark(String[] result) {
 		Statement stm;

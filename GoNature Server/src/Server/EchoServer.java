@@ -374,6 +374,41 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(sb.toString());
 				break;
 				//////Reports end/////
+			case "insertRequestToDB":
+				sq.insertRequest(result);
+				client.sendToClient(done);
+				break;
+			case "checkIfApproveRequest":
+				int status=sq.IsApproveEnterParkForTraveller(result);
+				StringBuffer sb5= new StringBuffer();
+				sb5.append("RequestsController");
+				sb5.append(" ");
+				sb5.append("checkIfApproveRequest");
+				sb5.append(" ");
+				sb5.append(Integer.toString(status));
+				client.sendToClient(sb5.toString());
+				break;
+			case "getRequestsTravellerOfEnterPark":
+				String string = sq.getRequestTableOfEnterPark(result[0]);
+				sb = new StringBuffer();
+				sb.append("RequestsController");
+				sb.append(" ");
+				sb.append("getRequestsTravellerOfEnterPark");
+				sb.append(" ");
+				sb.append(string);
+				client.sendToClient(sb.toString());
+				break;
+				
+			case "changeStatusForCasualTraveller":
+				sq.changeRequestStatusForCasualTraveller(result);
+				sb = new StringBuffer();
+				sb.append("RequestsController");
+				sb.append(" ");
+				sb.append("getRequestsTravellerOfEnterPark");
+				sb.append(" ");
+				sb.append(done);
+				client.sendToClient(sb.toString());
+				break;
 
 			default:
 				System.out.println("Sorry, don't know what you presse Now");
