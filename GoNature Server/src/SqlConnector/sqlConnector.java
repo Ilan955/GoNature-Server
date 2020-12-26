@@ -151,7 +151,7 @@ public class sqlConnector {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return i += 2;
+		return i += 1000000002;
 	}
 
 	public String getManagerDiscount(String[] msg) {
@@ -815,7 +815,7 @@ public class sqlConnector {
 		}
 		try {// try to get members and family members with order
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT numOfVisitors FROM project.order WHERE MONTH(Date)=? AND YEAR(Date)=? AND status='Confirmed' AND (type='Member' OR type='Family Member') ");
+					"SELECT numOfVisitors FROM project.order WHERE MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed' AND (type='Member' OR type='Family Member') ");
 			ps.setString(1, month);
 			ps.setString(2, year);
 			stm = conn.createStatement();
@@ -830,13 +830,13 @@ public class sqlConnector {
 		}
 		try {// try to get Groups members with order
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT numOfVisitors FROM project.order WHERE MONTH(Date)=? AND YEAR(Date)=? AND status='Confirmed' AND type='Group Guide') ");
+					"SELECT numOfVisitors FROM project.order WHERE MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed' AND type='Group Guide' ");
 			ps.setString(1, month);
 			ps.setString(2, year);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				sumSolo += rs.getInt("numOfVisitors");
+				sumGroups += rs.getInt("numOfVisitors");
 			}
 			rs.close();
 		} catch (SQLException e) {
