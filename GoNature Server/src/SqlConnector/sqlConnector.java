@@ -12,8 +12,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 
-
-
 public class sqlConnector {
 
 	private Connection conn;
@@ -24,13 +22,12 @@ public class sqlConnector {
 
 	public String[] CheckForId(String msg) {
 		Statement stm;
-		String[] s = new String[5]; 
+		String[] s = new String[5];
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE ID=?");
 			stm = conn.createStatement();
 			ps.setString(1, msg);
 			ResultSet rs = ps.executeQuery();
-
 
 			while (rs.next()) {
 				s[0] = rs.getString(1);
@@ -67,11 +64,9 @@ public class sqlConnector {
 		}
 
 	}
-	//////////////////////// NEW UPDATES ////////////////////////////////
 
 	public boolean isMemberExists(String[] msg) {
 		Statement stm;
-		System.out.println("is member exists?");
 		try {
 
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE ID=?");
@@ -115,14 +110,13 @@ public class sqlConnector {
 		}
 	}
 
-	public boolean addMember(String[] msg) {
+	public String addMember(String[] msg) {
 		Statement stm;
 		String memberCNT = String.valueOf(nextMember());
 		try {
 			PreparedStatement ps = conn.prepareStatement(
 
 					"INSERT project.person SET ID=? ,firstName=?, lastName=?, phoneNumber=? ,Email=? ,creditCardNum=? ,maxFamilyMembers=? ,memberId=?");
-
 
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
@@ -133,10 +127,11 @@ public class sqlConnector {
 			ps.setString(7, msg[6]);
 			ps.setString(8, memberCNT);
 			ps.executeUpdate();
-			return true;
+			System.out.println(memberCNT);
+			return memberCNT.toString();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return false;
+			return "false";
 		}
 
 	}
@@ -145,19 +140,18 @@ public class sqlConnector {
 		Statement stm;
 		int i = 0;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person");
+			PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS rowcount FROM project.person");
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 
-			while (rs.next()) {
-				i++;
-			}
+			rs.next();
+			i = rs.getInt("rowcount");
+			rs.close();
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		i = i / 9;
-		return i++;
+		return i += 1000000002;
 	}
 
 	public String getManagerDiscount(String[] msg) {
@@ -178,9 +172,9 @@ public class sqlConnector {
 			discount += " ";// add space
 			discount += rs.getDate(3);// get lastDate
 			discount += " ";// add space
-			discount += rs.getFloat(4);// get precentage
+			discount += rs.getFloat(4);// get percentage
 			discount += " ";// add space
-			discount += rs.getString(5);// get precentage
+			discount += rs.getString(5);// get percentage
 
 			return discount;
 		} catch (SQLException e) {
@@ -238,42 +232,38 @@ public class sqlConnector {
 
 	public boolean addToWaitingList(String result) {
 		String msg[] = result.split(" ");
-		//msg = [orderToAdd[0] , ordersToWaitFor...]
+		// msg = [orderToAdd[0] , ordersToWaitFor...]
 		Statement stm;
-		int cnt,i;
-		int numOf_ordersToWaitFor = msg.length - 1 ; //minus 1 because msg[0] = orderToAdd
+		int cnt, i;
+		int numOf_ordersToWaitFor = msg.length - 1; // minus 1 because msg[0] = orderToAdd
 		try {
-			for(i=1;i<numOf_ordersToWaitFor;i++) {
-			cnt = 0;
-			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.waitinglist where orderToWaitFor = ?");
-			stm = conn.createStatement();
-			ps.setString(1, msg[i]);//orderToWaitFor
-			ResultSet rs = ps.executeQuery();
-			while(rs.next())
-				cnt++; // count how many orders alredy wait for this orderToWaitFor
-			
-			/*enter orderToAdd to waitinglist*/
-			ps = conn.prepareStatement("insert into project.waitinglist (orderToWaitFor, waitingOrder, placeInLine) values (?, ?, ?)");
-			ps.setString(1, msg[i]);//orderToWaitFor
-			ps.setString(2, msg[0]);//orderToAdd
-			ps.setString(3, String.valueOf(cnt));//index
-			ps.executeUpdate();
-			}//for
-			
-			return true;
-			
-			
-		
-		} catch (SQLException e) {
-		e.printStackTrace();
-		return false;
-		}
-		
-		
-		
-		
-	}
+			for (i = 1; i < numOf_ordersToWaitFor; i++) {
+				cnt = 0;
+				PreparedStatement ps = conn
+						.prepareStatement("SELECT * FROM project.waitinglist where orderToWaitFor = ?");
+				stm = conn.createStatement();
+				ps.setString(1, msg[i]);// orderToWaitFor
+				ResultSet rs = ps.executeQuery();
+				while (rs.next())
+					cnt++; // count how many orders alredy wait for this orderToWaitFor
 
+				/* enter orderToAdd to waitinglist */
+				ps = conn.prepareStatement(
+						"insert into project.waitinglist (orderToWaitFor, waitingOrder, placeInLine) values (?, ?, ?)");
+				ps.setString(1, msg[i]);// orderToWaitFor
+				ps.setString(2, msg[0]);// orderToAdd
+				ps.setString(3, String.valueOf(cnt));// index
+				ps.executeUpdate();
+			} // for
+
+			return true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+	}
 
 	public String findOrderFirstInLine(String canceldOrderNum) {
 		Statement stm;
@@ -357,25 +347,29 @@ public class sqlConnector {
 				ps.setString(1, orderToWaitFor_arr[i]);
 				ps.setString(2, orderToRemove);
 				ps.executeUpdate();
-				
-				/*decrease placeInLine of all watingOrders*/
-				ps = conn.prepareStatement("SELECT * FROM project.waitinglist where orderToWaitFor = ?"); //get all remain watingOrders to orderToWaitFor
+
+				/* decrease placeInLine of all watingOrders */
+				ps = conn.prepareStatement("SELECT * FROM project.waitinglist where orderToWaitFor = ?"); // get all
+																											// remain
+																											// watingOrders
+																											// to
+																											// orderToWaitFor
 				stm = conn.createStatement();
-				ps.setString(1, orderToWaitFor_arr[i]);//orderToWaitFor
+				ps.setString(1, orderToWaitFor_arr[i]);// orderToWaitFor
 				rs = ps.executeQuery();
-				while(rs.next())
-				{
-				/*get details*/
-					int waitingOrder = rs.getInt(2); //waitingOrder
-					int oldPlaceInLine = rs.getInt(3);//placeInLine
-					int newPlace = oldPlaceInLine-1;
-				/*update placeInLine*/
-					ps = conn.prepareStatement("UPDATE project.waitinglist SET placeInLine=? where orderToWaitFor = ? and waitingOrder = ?");
-					ps.setString(1, String.valueOf(newPlace));//placeInLine
-					ps.setString(2, orderToWaitFor_arr[i]);//orderToWaitFor
-					ps.setString(3,String.valueOf(waitingOrder));
+				while (rs.next()) {
+					/* get details */
+					int waitingOrder = rs.getInt(2); // waitingOrder
+					int oldPlaceInLine = rs.getInt(3);// placeInLine
+					int newPlace = oldPlaceInLine - 1;
+					/* update placeInLine */
+					ps = conn.prepareStatement(
+							"UPDATE project.waitinglist SET placeInLine=? where orderToWaitFor = ? and waitingOrder = ?");
+					ps.setString(1, String.valueOf(newPlace));// placeInLine
+					ps.setString(2, orderToWaitFor_arr[i]);// orderToWaitFor
+					ps.setString(3, String.valueOf(waitingOrder));
 				}
-			}//for
+			} // for
 			return true;
 
 		} catch (SQLException e) {
@@ -393,11 +387,11 @@ public class sqlConnector {
 			stm = conn.createStatement();
 			ps.setString(1, orderToRemove_AllWaiters);
 			ps.executeUpdate();
-		
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
 
 	/*
 	 * will check the amount of orders that is in the system
@@ -405,20 +399,19 @@ public class sqlConnector {
 	 */
 	public int nextOrder() {
 		Statement stm;
-		int i=0;
-	try {
-		PreparedStatement ps = conn.prepareStatement("SELECT orderNum FROM gonaturedb.order ORDER BY orderNum DESC ");
-		stm = conn.createStatement();
-		ResultSet rs = ps.executeQuery();
-		if(rs.isLast())
-			System.out.println("GREAT!");
-		while (rs.next()) {
-			String tmp = rs.getString(1);
-			 i = Integer.parseInt(tmp);
-			 break;
-		}
-		
-
+		int i = 0;
+		try {
+			PreparedStatement ps = conn
+					.prepareStatement("SELECT orderNum FROM gonaturedb.order ORDER BY orderNum DESC ");
+			stm = conn.createStatement();
+			ResultSet rs = ps.executeQuery();
+			if (rs.isLast())
+				System.out.println("GREAT!");
+			while (rs.next()) {
+				String tmp = rs.getString(1);
+				i = Integer.parseInt(tmp);
+				break;
+			}
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -427,103 +420,103 @@ public class sqlConnector {
 		return i++;
 	}
 
-	
-	return ++i;
-	}
-	
 	/*
 	 * 
-	 * check how many visitors in total there is for the desired time and date and return this value
+	 * check how many visitors in total there is for the desired time and date and
+	 * return this value
 	 * 
 	 */
 	public int howManyForCurrentTimeAndDat1e(String[] msg) {
 		String res;
-		int counter=0;
+		int counter = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT numOfVisitors FROM project.order WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=?");
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT numOfVisitors FROM project.order WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=?");
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.setString(3, msg[2]);
-			ResultSet rs=ps.executeQuery();
-			while(rs.next()) {
-				res=rs.getString(1);
-				counter+=Integer.parseInt(res);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				res = rs.getString(1);
+				counter += Integer.parseInt(res);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 		return counter;
-		
+
 	}
-	
+
 	/*
-	 * method that will check how many visitors allowed to be in wanted park in total.
+	 * method that will check how many visitors allowed to be in wanted park in
+	 * total.
 	 */
 	public int howManyAllowedInPark(String parkName) {
 		String res;
-		int counter=0;
+		int counter = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn
+					.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE ParkName=?");
 			ps.setString(1, parkName);
-			
-			ResultSet rs=ps.executeQuery();
+
+			ResultSet rs = ps.executeQuery();
 			rs.next();
-			
-			res=rs.getString(1);
-			counter+=Integer.parseInt(res);
-			
+
+			res = rs.getString(1);
+			counter += Integer.parseInt(res);
+
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 		return counter;
 	}
-	
-	
 
 	public int howManyForCurrentTimeAndDate(String[] result) throws ParseException {
 		Statement stm;
 		LocalDate wanted1 = LocalDate.parse(result[3]);
-		Date wanted=java.sql.Date.valueOf(wanted1);
-		
-		int counter=0;
+		Date wanted = java.sql.Date.valueOf(wanted1);
+
+		int counter = 0;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT numOfVisitors,orderNum FROM gonaturedb.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? ");
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT numOfVisitors,orderNum FROM gonaturedb.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? ");
 			ps.setString(1, result[2]);
 			ps.setString(3, result[0]);
 			ps.setString(4, result[1]);
 			ps.setString(2, result[3]);
-			ResultSet rs=ps.executeQuery();
+			ResultSet rs = ps.executeQuery();
 			stm = conn.createStatement();
-			while(rs.next()) {
-				counter+=rs.getInt(1);
+			while (rs.next()) {
+				counter += rs.getInt(1);
 				System.out.println(rs.getString(2));
 			}
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 		return counter;
 
 	}
 
-	/*Method to insert new order to table
-	 * res[0]=time res[1]=date, res[2]= parkname , res[3]=price, res[4]=id, res[5]=type, res[6]=numOfVisit
+	/*
+	 * Method to insert new order to table res[0]=time res[1]=date, res[2]= parkname
+	 * , res[3]=price, res[4]=id, res[5]=type, res[6]=numOfVisit
 	 * 
 	 */
-	
+
 	public void addOrder(int orderNum, String[] result) {
 		Statement stm;
 		LocalDate wanted1 = LocalDate.parse(result[1]);
-		Date wanted=java.sql.Date.valueOf(wanted1);
-		
-		
+		Date wanted = java.sql.Date.valueOf(wanted1);
+
 		try {
-			PreparedStatement ps = conn.prepareStatement("INSERT INTO gonaturedb.order (orderNum, TimeInPark, DateOfVisit, wantedPark, TotalPrice, ID,type,numOfVisitors) VALUES (?,?,?,?,?,?,?,?)");
+			PreparedStatement ps = conn.prepareStatement(
+					"INSERT INTO gonaturedb.order (orderNum, TimeInPark, DateOfVisit, wantedPark, TotalPrice, ID,type,numOfVisitors) VALUES (?,?,?,?,?,?,?,?)");
 			ps.setInt(1, orderNum);
 			ps.setString(2, result[0]);
 			ps.setDate(3, wanted);
@@ -532,16 +525,16 @@ public class sqlConnector {
 			ps.setString(6, result[4]);
 			ps.setString(7, result[5]);
 			ps.setString(8, result[6]);
-			
+
 			ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
-		
-		
+
 	}
-	public boolean canGetEmployee(String userName) { //method checks if employee exists on our DB (By UserName)
+
+	public boolean canGetEmployee(String userName) { // method checks if employee exists on our DB (By UserName)
 		Statement stm;
 		try {
 			String[] s = userName.split(" "); // new row
@@ -550,9 +543,12 @@ public class sqlConnector {
 			ps.setString(1, s[0]);// new row
 			ps.executeQuery();
 			return true;
-		}catch (SQLException e) {e.printStackTrace();
-									return false;}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
+
 	public String[] getEmployeeUN(String empID) // if employee exists, DB returns this employee as a tuple (String[])
 	{
 		Statement stm;
@@ -563,20 +559,23 @@ public class sqlConnector {
 			stm = conn.createStatement();
 			ps.setString(1, check[0]);
 			ResultSet rs = ps.executeQuery();
-			s[0] = "EmployeeController"; //For GoClient.HandleMessageFromServer
-			s[1] = "IdentifyEmployee"; //in this case we assume that employee is in our DB --> if it isn't it will change
-				while(rs.next())
-				{
-					for (int i=2;i<12;i++) 
-						s[i] = rs.getString(i-1);
-				}
+			s[0] = "EmployeeController"; // For GoClient.HandleMessageFromServer
+			s[1] = "IdentifyEmployee"; // in this case we assume that employee is in our DB --> if it isn't it will
+										// change
+			while (rs.next()) {
+				for (int i = 2; i < 12; i++)
+					s[i] = rs.getString(i - 1);
+			}
 			if (s[10] == null)
-				s[1] = "IdentifyNotExistingEmployee"; //Means that we didn't find an employee with this userName 
-			else if (!(s[11].equals(check[1]))) {// It means that passwords do not match and employee can not enter to GoNature system
+				s[1] = "IdentifyNotExistingEmployee"; // Means that we didn't find an employee with this userName
+			else if (!(s[11].equals(check[1]))) {// It means that passwords do not match and employee can not enter to
+													// GoNature system
 				s[1] = "IdentifyPasswordDoesNotMatch";
 				s[11] = null;
 			}
-		}catch(SQLException e) {e.printStackTrace();}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return s;
 	}
 
@@ -584,7 +583,8 @@ public class sqlConnector {
 		Statement stm;
 
 		try {
-			PreparedStatement ps = conn.prepareStatement("DELETE FROM gonaturedb.order WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+			PreparedStatement ps = conn.prepareStatement(
+					"DELETE FROM gonaturedb.order WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
 			ps.setString(1, result[0]);
 			ps.setString(2, result[1]);
 			ps.setString(3, result[2]);
@@ -592,114 +592,111 @@ public class sqlConnector {
 			ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
-		
-		
-		
-		
+
 	}
 
 	public String getOrders(String iD) {
 		Statement stm;
-		StringBuffer s= new StringBuffer();
+		StringBuffer s = new StringBuffer();
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice FROM gonaturedb.order WHERE ID=?");
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice FROM gonaturedb.order WHERE ID=?");
 			ps.setString(1, iD);
-			ResultSet rs=ps.executeQuery();
-			while(rs.next()) {
-				for(int i=1;i<=6;i++)
-				{
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				for (int i = 1; i <= 6; i++) {
 					s.append(rs.getString(i));
 					s.append(" ");
 				}
-				
+
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 		s.append("Done");
-		
+
 		return s.toString();
 	}
-	
-	
+
 	public int howManyUnexpectedVisitorsInPark(String parkName) {
 		String res;
-		int unexpectedVisitors=0;
+		int unexpectedVisitors = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn
+					.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE ParkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
-			ResultSet rs=ps.executeQuery();
-			while(rs.next()) {
-			res=rs.getString(1);
-			unexpectedVisitors=Integer.parseInt(res);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				res = rs.getString(1);
+				unexpectedVisitors = Integer.parseInt(res);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 		return unexpectedVisitors;
 	}
-	
+
 	public int howManyCurrentvisitorsForOrdersInPark(String parkName) {
 		String res;
-		int currentvisitors=0;
+		int currentvisitors = 0;
 		Statement stm;
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT currentVisitors FROM project.park WHERE ParkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
-			ResultSet rs=ps.executeQuery();
-			while(rs.next()) {
-			res=rs.getString(1);
-			currentvisitors=Integer.parseInt(res);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				res = rs.getString(1);
+				currentvisitors = Integer.parseInt(res);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 		return currentvisitors;
 	}
-	
+
 	public int howManyMaxvisitorsAllowedInPark(String parkName) {
 		String res;
-		int Maxvisitors=0;
+		int Maxvisitors = 0;
 		Statement stm;
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT maxVisitors FROM project.park WHERE ParkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
-			ResultSet rs=ps.executeQuery();
-			while(rs.next()) {
-			res=rs.getString(1);
-			Maxvisitors=Integer.parseInt(res);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				res = rs.getString(1);
+				Maxvisitors = Integer.parseInt(res);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 		return Maxvisitors;
 	}
-	public String[] getTravellerFromDB(String travellerID) //returns a String[] with this traveller info 
+
+	public String[] getTravellerFromDB(String travellerID) // returns a String[] with this traveller info
 	{
 		int temp = 0;
 		Statement stm;
-		String[] s = new String[11]; //should be as number fields number in traveller class
-		//I am working currently on a DB with 5 fields for traveller. It works
+		String[] s = new String[11]; // should be as number fields number in traveller class
+		// I am working currently on a DB with 5 fields for traveller. It works
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE id = ? OR memberID = ?");
 			stm = conn.createStatement();
 			ps.setString(1, travellerID);
 			ps.setString(2, travellerID);
 			ResultSet rs = ps.executeQuery();
-			s[0] = "UserController"; //for use of GoClient.HandleMessageFromServer
+			s[0] = "UserController"; // for use of GoClient.HandleMessageFromServer
 			s[1] = "IdentifyTraveller";
-			while(rs.next())
-			{
+			while (rs.next()) {
 				s[2] = rs.getString(1);
 				s[3] = rs.getString(2);
 				s[4] = rs.getString(3);
@@ -712,55 +709,57 @@ public class sqlConnector {
 				s[10] = rs.getString(9);
 			}
 			s[9] = ("" + temp);
-			if (s[5] == null)
-			{
+			if (s[5] == null) {
 				s[1] = "IdentifyNotExistingTraveller";
 			}
-					//System.out.print(rs.getString(i).toString());
-		}catch(SQLException e) {e.printStackTrace();}
+			// System.out.print(rs.getString(i).toString());
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return s;
 	}
-		public boolean canGetTraveller(String travellerID) //Checks if traveller exists in our DB (By ID)
+
+	public boolean canGetTraveller(String travellerID) // Checks if traveller exists in our DB (By ID)
 	{
 		Statement stm;
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.person WHERE id = ? OR memberID = ?");
-		//	stm = conn.createStatement();
+			// stm = conn.createStatement();
 			ps.setString(1, travellerID);
-			ps.setString(2,  travellerID);
+			ps.setString(2, travellerID);
 			ps.executeQuery();
 			return true;
-		}catch (SQLException e) {e.printStackTrace();
-									return false;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
 		}
 	}
-	
-	
 
 	public float howmanyTimeEveryVisitorInPark(String parkName) {
 		String res;
-		float time=0;
+		float time = 0;
 		Statement stm;
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park WHERE ParkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
-			ResultSet rs=ps.executeQuery();
-			while(rs.next()) {
-			res=rs.getString(1);
-			time=Float.parseFloat(res);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				res = rs.getString(1);
+				time = Float.parseFloat(res);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 		return time;
 	}
-	
-	public void updateUnexpectedVisitors(String[]msg) {
+
+	public void updateUnexpectedVisitors(String[] msg) {
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE ParkName=?");
+			PreparedStatement ps = conn
+					.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE ParkName=?");
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.executeUpdate();
@@ -768,29 +767,88 @@ public class sqlConnector {
 			e.printStackTrace();
 		}
 	}
+
 	public void insertTravellerInPark(String[] result) {
 		Statement stm;
 		LocalDate wanted1 = LocalDate.parse(result[2]);
-		Date wanted=java.sql.Date.valueOf(wanted1);
-		
+		Date wanted = java.sql.Date.valueOf(wanted1);
+
 		try {
-			PreparedStatement ps = conn.prepareStatement("INSERT INTO project.travellerInPark(ID,numOfVisitors,Date,enterTime,exitTime,price,wantedPark) VALUES (?,?,?,?,null,?,?)");
-			ps.setString(1, result[0]); //ID	
-			ps.setString(2, result[1]); //numberOfVisitors
-			ps.setDate(3, wanted);   //Date
-			ps.setString(4, result[3]); //time
+			PreparedStatement ps = conn.prepareStatement(
+					"INSERT INTO project.travellerInPark(ID,numOfVisitors,Date,enterTime,exitTime,price,wantedPark) VALUES (?,?,?,?,null,?,?)");
+			ps.setString(1, result[0]); // ID
+			ps.setString(2, result[1]); // numberOfVisitors
+			ps.setDate(3, wanted); // Date
+			ps.setString(4, result[3]); // time
 			ps.setFloat(5, Float.parseFloat(result[4]));
-			ps.setString(6, result[5]);	
+			ps.setString(6, result[5]);
 			ps.execute();
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
-		
+
 		}
-		
-		
+
 	}
 
+	////// Reports start/////
+	public String getVisitorsDataReport(String[] monthYear) {
+		String month = monthYear[0];
+		String year = monthYear[1];
+		StringBuffer sb = new StringBuffer();
+		Statement stm;
+		int sumSolo = 0, sumMembers = 0, sumGroups = 0;
+		try {// try to get travellers with out order
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT numOfVisitors FROM project.travellerinpark WHERE MONTH(Date)=? AND YEAR(Date)=?");
+			ps.setString(1, month);
+			ps.setString(2, year);
+			stm = conn.createStatement();
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				sumSolo += rs.getInt("numOfVisitors");
+			}
+			rs.close();
+		} catch (SQLException e) {
+			System.out.println("Fail gett sumSolo");
+			e.printStackTrace();
+		}
+		try {// try to get members and family members with order
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT numOfVisitors FROM project.order WHERE MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed' AND (type='Member' OR type='Family Member') ");
+			ps.setString(1, month);
+			ps.setString(2, year);
+			stm = conn.createStatement();
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				sumMembers += rs.getInt("numOfVisitors");
+			}
+			rs.close();
+		} catch (SQLException e) {
+			System.out.println("Fail get sumMember");
+			e.printStackTrace();
+		}
+		try {// try to get Groups members with order
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT numOfVisitors FROM project.order WHERE MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed' AND type='Group Guide' ");
+			ps.setString(1, month);
+			ps.setString(2, year);
+			stm = conn.createStatement();
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				sumGroups += rs.getInt("numOfVisitors");
+			}
+			rs.close();
+		} catch (SQLException e) {
+			System.out.println("Fail geting sumGroup");
+			e.printStackTrace();
+		}
+		sb.append(sumSolo);
+		sb.append(" ");
+		sb.append(sumMembers);
+		sb.append(" ");
+		sb.append(sumGroups);
+		return sb.toString();
+	}
+	////// Reports end/////
 }
-
-

@@ -142,7 +142,6 @@ public class EchoServer extends AbstractServer {
 				 client.sendToClient(s);
 				
 
-			//////////////////////// NEW UPDATES ////////////////////////////////
 			case "isMemberExists":
 				res = sq.isMemberExists(result);
 				StringBuffer sb3 = new StringBuffer();
@@ -155,28 +154,15 @@ public class EchoServer extends AbstractServer {
 				break;
 
 			case "addMember":
-				res = sq.addMember(result);
-				client.sendToClient("Done");
-
-
-			case "exists":
-				boolean res;
-				res = sq.exists(result);
-				StringBuffer sb3 = new StringBuffer();
+				sb3 = new StringBuffer();
 				sb3.append("SignUpController");
 				sb3.append(" ");
-				sb3.append(res);
-
+				sb3.append("addMember");
+				sb3.append(" ");
+				sb3.append(sq.addMember(result));
 				client.sendToClient(sb3.toString());
 				break;
 
-			case "addMember":
-				res = sq.addMember(result);
-				StringBuffer sb4 = new StringBuffer();
-				String se = "Done";
-
-				client.sendToClient(se);
-				break;
 			case "getEmployeeDetails":
 				if (sq.canGetEmployee(result[0])) {
 					bar_String = new String[12];
@@ -376,6 +362,19 @@ public class EchoServer extends AbstractServer {
 				sq.insertTravellerInPark(result);
 				client.sendToClient(done);
 				break;
+				//////Reports start/////
+			case "getData":
+				String ans=sq.getVisitorsDataReport(result);
+				sb= new StringBuffer();
+				sb.append("ReportsController");
+				sb.append(" ");
+				sb.append("getData");
+				sb.append(" ");
+				sb.append(ans);
+				client.sendToClient(sb.toString());
+				break;
+				//////Reports end/////
+
 			default:
 				System.out.println("Sorry, don't know what you presse Now");
 
