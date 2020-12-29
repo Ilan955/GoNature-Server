@@ -11,6 +11,7 @@ import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class sqlConnector {
 
@@ -192,7 +193,7 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			/* get park maxDuration time */
-			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park where ParkName = ?;");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park where parkName = ?;");
 			ps.setString(1, result[0]);// parkName
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -459,7 +460,7 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			PreparedStatement ps = conn
-					.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE ParkName=?");
+					.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 
 			ResultSet rs = ps.executeQuery();
@@ -627,7 +628,7 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			PreparedStatement ps = conn
-					.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE ParkName=?");
+					.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -647,7 +648,7 @@ public class sqlConnector {
 		int currentvisitors = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT currentVisitors FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT currentVisitors FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -667,7 +668,7 @@ public class sqlConnector {
 		int Maxvisitors = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT maxVisitors FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxVisitors FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -686,7 +687,7 @@ public class sqlConnector {
 	{
 		int temp = 0;
 		Statement stm;
-		String[] s = new String[11]; // should be as number fields number in traveller class
+		String[] s = new String[12]; // should be as number fields number in traveller class
 		// I am working currently on a DB with 5 fields for traveller. It works
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE id = ? OR memberID = ?");
@@ -707,10 +708,12 @@ public class sqlConnector {
 				s[9] = null;
 				temp = rs.getInt(8);
 				s[10] = rs.getString(9);
+				s[11] = rs.getString(10);
 			}
 			s[9] = ("" + temp);
 			if (s[5] == null) {
 				s[1] = "IdentifyNotExistingTraveller";
+				s[5] = "" + travellerID;
 			}
 			// System.out.print(rs.getString(i).toString());
 		} catch (SQLException e) {
@@ -740,7 +743,7 @@ public class sqlConnector {
 		float time = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -759,7 +762,7 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			PreparedStatement ps = conn
-					.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE ParkName=?");
+					.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE parkName=?");
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.executeUpdate();
@@ -932,5 +935,127 @@ public class sqlConnector {
 		sb.append(sumGroups);
 		return sb.toString();
 	}
+	public String sendParkSettingsRequestToDepManager(String[] s) {
+		Statement stm;
+		int id = sendNewRequestID();
+		try {
+			PreparedStatement ps = conn.prepareStatement("insert into project.newparksettingsrequests values (?, ?, ?, ?, ?, ?, ?, ?)");
+			ps.setInt(1, id);
+			LocalDate start = LocalDate.parse(s[1]);
+			Date startDate = java.sql.Date.valueOf(start);
+			LocalTime time = LocalTime.parse(s[2]);
+			Time hour = java.sql.Time.valueOf(time);
+			ps.setDate(2, startDate);
+			ps.setTime(3, hour);
+			ps.setString(4,s[3]);
+			ps.setInt(5, Integer.parseInt(s[4]));
+			ps.setInt(6, Integer.parseInt(s[5]));
+			ps.setFloat(7,Float.parseFloat(s[6]));
+			ps.setInt(8, Integer.parseInt(s[7]));
+			ps.executeUpdate();
+		}catch (SQLException e) {
+			return "false";			
+		}
+		return "true";
+	}
+	public int sendNewRequestID() {
+		Statement stm;
+		int i = 0;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS rowcount FROM project.newparksettingsrequests");
+			stm = conn.createStatement();
+			ResultSet rs = ps.executeQuery();
+			rs.next();
+			i = rs.getInt("rowcount");
+			rs.close();
+
+		} catch (SQLException e) {
+			return -1;
+		}
+		return ++i;
+	}
+	public String getParkSettingsRequests() {
+		String s;
+		StringBuffer sb = new StringBuffer();
+		sb.append("EmployeeController ");
+		sb.append("displayParkSettingsRequestsToDepartmentManager ");
+		int i = 2;
+		int idReq = 0;
+		String date="";
+		String time="";
+		String wantedPark="";
+		int maxVisit=0,gapBetween=0;
+		float maxDur=0;
+		
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.newparksettingsrequests WHERE status = ?");
+			stm = conn.createStatement();
+			ps.setInt(1, 0);
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				idReq = rs.getInt(1);
+				date+=rs.getString(2);
+				time+=rs.getString(3);
+				wantedPark=rs.getString(4);
+				maxVisit=rs.getInt(5);
+				gapBetween=rs.getInt(6);
+				maxDur=rs.getFloat(7);	
+				sb.append("" +idReq);
+				sb.append(" ");
+				sb.append(wantedPark + " ");
+				sb.append(date + " ");
+				sb.append(time + " ");
+				sb.append("" + maxVisit + " ");
+				sb.append("" + gapBetween + " ");
+				sb.append("" + maxDur + " ");
+				idReq=0;
+				date="";
+				time="";
+				wantedPark="";
+				maxVisit=0;
+				gapBetween=0;
+				maxDur=0;
+			} 
+		}
+			catch (SQLException e) {
+				return null;
+			}
+		sb.append("Done");
+		s= sb.toString();
+		return s;
+	}
 	////// Reports end/////
+
+	public boolean updateParkChangeRequestStatus(String string) {
+		
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("UPDATE project.newparksettingsrequests SET status=? WHERE requestID=?");
+			ps.setInt(1, 1);
+			ps.setInt(2,Integer.parseInt(string));
+			ps.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public boolean updateParkChangesInParkTable(String parkName,String maxVisitors,String gap,String maxDur) {
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("UPDATE project.park SET maxVisitors=? , maxAvailableVisitors = ?, maxDuration = ?  WHERE parkName= ? ");
+			ps.setInt(1, Integer.parseInt(maxVisitors));
+			int maxAvailable = Integer.parseInt(maxVisitors) - Integer.parseInt(gap);
+			ps.setInt(2,maxAvailable);
+			ps.setFloat(3, Float.parseFloat(maxDur));
+			ps.setString(4, parkName);
+			ps.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 }
