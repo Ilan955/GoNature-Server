@@ -69,15 +69,13 @@ public class EchoServer extends AbstractServer {
 
 	public void handleMessageFromClient(Object msg, ConnectionToClient client) {
 
-
-
-/*
- *       
- *       will decrypte what type of action the server need to do
- *       using switch case to simplify the actions the server will make
- *    	every time the first place in the string array will tell what type of method to triger.
- *     
- */
+		/*
+		 * 
+		 * will decrypte what type of action the server need to do using switch case to
+		 * simplify the actions the server will make every time the first place in the
+		 * string array will tell what type of method to triger.
+		 * 
+		 */
 		String[] bar_String;
 
 		String done = "Done";
@@ -88,7 +86,6 @@ public class EchoServer extends AbstractServer {
 		String[] result = DecrypteMassege(st);
 
 		StringBuffer sb;
-
 
 		try {
 			boolean res;
@@ -103,20 +100,17 @@ public class EchoServer extends AbstractServer {
 					sb.append(" ");
 				}
 
+				sb = new StringBuffer();
+				for (int i = 0; i < user.length; i++) {
+					sb.append(user[i]);
+					sb.append(" ");
+				}
 
-
-				 sb = new StringBuffer();
-			    for(int i = 0; i < user.length; i++) {
-			         sb.append(user[i]);
-			         sb.append(" ");
-			      }
-			    
-			      String str = sb.toString();
-			      client.sendToClient(str);
-
+				String str = sb.toString();
+				client.sendToClient(str);
 
 				break;
-				
+
 			case "updateVisitor":
 				if (sq.updateEmail(result)) {
 					user = sq.CheckForId(result[0]);
@@ -130,7 +124,7 @@ public class EchoServer extends AbstractServer {
 					client.sendToClient(str2);
 				}
 				break;
-				
+
 			case "connectivity":
 
 				sb = new StringBuffer();
@@ -139,8 +133,7 @@ public class EchoServer extends AbstractServer {
 				sb.append(client);
 				String s = sb.toString();
 
-				 client.sendToClient(s);
-				
+				client.sendToClient(s);
 
 			case "isMemberExists":
 				res = sq.isMemberExists(result);
@@ -170,7 +163,7 @@ public class EchoServer extends AbstractServer {
 					checkString.append(result[0]);
 					checkString.append(" ");
 					checkString.append(result[1]);
-					//System.out.println("I am getEmployeeDetails: " + checkString.toString());
+					// System.out.println("I am getEmployeeDetails: " + checkString.toString());
 					bar_String = sq.getEmployeeUN(checkString.toString());
 					sb = new StringBuffer();
 					for (int i = 0; i < bar_String.length; i++) {
@@ -183,9 +176,8 @@ public class EchoServer extends AbstractServer {
 				break;
 			case "getTravellerDetails":
 
-				if (sq.canGetTraveller(result[0]))
-				{
-					//System.out.print(result[0]);
+				if (sq.canGetTraveller(result[0])) {
+					// System.out.print(result[0]);
 					bar_String = new String[11];
 
 					bar_String = sq.getTravellerFromDB(result[0]);
@@ -200,11 +192,10 @@ public class EchoServer extends AbstractServer {
 				}
 
 				break;
-				
+
 			case "exit":
 				serverStopped();
 				break;
-
 
 			case "setManagerDiscount":
 				boolean bool = sq.addManagerDiscount(result); // returns boolean <<<<<<<<<<<<<<<<<<<<<<<<
@@ -322,9 +313,25 @@ public class EchoServer extends AbstractServer {
 			 * This method will search for the order and delete it
 			 */
 			case "cancelOrder":
-				sq.cancelOrder(result);
+				sq.changeStatusOfOrder(result, "cancelled");
 				client.sendToClient(done);
 				break;
+
+			case "getDataForReport":
+				int cancelledOrderNumber = sq.checkHowManyCancelled(result, "canceled");
+				int notEnteredOrderNumber = sq.checkHowManyCancelled(result, "confirmed");
+
+				sb = new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("getDataForReport");
+				sb.append(" ");
+				sb.append(Integer.toString(cancelledOrderNumber));
+				sb.append(" ");
+				sb.append(Integer.toString(notEnteredOrderNumber));
+				client.sendToClient(sb.toString());
+				break;
+
 			case "getExsistingOrders":
 				String res1 = sq.getOrders(result[0]);
 				sb = new StringBuffer();
@@ -335,15 +342,18 @@ public class EchoServer extends AbstractServer {
 				sb.append(res1);
 				client.sendToClient(sb.toString());
 				break;
-
+			case "ChangeToWaitOrder":
+				sq.changeStatusOfOrder(result, "waiting");
+				client.sendToClient(done);
+				break;
 			case "DetailsPark":
 
-				int currentVisitors=sq.howManyCurrentvisitorsForOrdersInPark(result[0]);
-				int unexpectedVisitors=sq.howManyUnexpectedVisitorsInPark(result[0]);
-				int maxAvailableVisitors=sq.howManyAllowedInPark(result[0]);
-				int maxVisitors=sq.howManyMaxvisitorsAllowedInPark(result[0]);
-				float maxDuration=sq.howmanyTimeEveryVisitorInPark(result[0]);
-				sb= new StringBuffer();
+				int currentVisitors = sq.howManyCurrentvisitorsForOrdersInPark(result[0]);
+				int unexpectedVisitors = sq.howManyUnexpectedVisitorsInPark(result[0]);
+				int maxAvailableVisitors = sq.howManyAllowedInPark(result[0]);
+				int maxVisitors = sq.howManyMaxvisitorsAllowedInPark(result[0]);
+				float maxDuration = sq.howmanyTimeEveryVisitorInPark(result[0]);
+				sb = new StringBuffer();
 				sb.append("ParkController");
 				sb.append(" ");
 				sb.append("DetailsPark");
@@ -363,16 +373,16 @@ public class EchoServer extends AbstractServer {
 				sq.updateUnexpectedVisitors(result);
 				client.sendToClient(done);
 				break;
-				
+
 			case "setCurrentVisitros":
 				sq.updateCurrentVisitors(result);
 				client.sendToClient(done);
 				break;
-				
+
 			case "enterWithoutOrder":
 				sq.insertTravellerInPark(result);
 				client.sendToClient(done);
-				break;	
+				break;
 			case "updateExitTimeForTravellerWithOrder":
 				sq.enterExitTimeForTravellerWithOrder(result);
 				client.sendToClient(done);
@@ -381,10 +391,10 @@ public class EchoServer extends AbstractServer {
 				sq.enterExitTimeForcasualTraveller(result);
 				client.sendToClient(done);
 				break;
-				//////Reports start/////
+			////// Reports start/////
 			case "getData":
-				String ans=sq.getVisitorsDataReport(result);
-				sb= new StringBuffer();
+				String ans = sq.getVisitorsDataReport(result);
+				sb = new StringBuffer();
 				sb.append("ReportsController");
 				sb.append(" ");
 				sb.append("getData");
@@ -392,14 +402,14 @@ public class EchoServer extends AbstractServer {
 				sb.append(ans);
 				client.sendToClient(sb.toString());
 				break;
-				//////Reports end/////
+			////// Reports end/////
 			case "insertRequestToDB":
 				sq.insertRequest(result);
 				client.sendToClient(done);
 				break;
 			case "checkIfApproveRequest":
-				int status=sq.IsApproveEnterParkForTraveller(result);
-				StringBuffer sb5= new StringBuffer();
+				int status = sq.IsApproveEnterParkForTraveller(result);
+				StringBuffer sb5 = new StringBuffer();
 				sb5.append("RequestsController");
 				sb5.append(" ");
 				sb5.append("checkIfApproveRequest");
@@ -417,12 +427,12 @@ public class EchoServer extends AbstractServer {
 				sb.append(string);
 				client.sendToClient(sb.toString());
 				break;
-				
+
 			case "changeStatusForCasualTraveller":
 				sq.changeRequestStatusForCasualTraveller(result);
 				client.sendToClient(done);
 				break;
-	
+
 			case "enterDateofFullCapcityPark":
 				sq.insertfullcapacityPark(result);
 				client.sendToClient(done);
@@ -451,13 +461,16 @@ public class EchoServer extends AbstractServer {
 				sb.append(st1);
 				client.sendToClient(sb.toString());
 				break;
+			case "setEnterOrder":
+				sq.changeStatusOfOrder(result, "Entered");
+				client.sendToClient(done);
+				break;
 			default:
 				System.out.println("Sorry, don't know what you presse Now");
 
 			}
 		} catch (Exception e) {
 			System.out.println("Error");
-
 
 		}
 
@@ -503,7 +516,8 @@ public class EchoServer extends AbstractServer {
 
 		try {
 
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "root");
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root",
+					"root");
 
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
@@ -531,7 +545,6 @@ public class EchoServer extends AbstractServer {
 		}
 
 	}
-
 
 }
 //End of EchoServer class
