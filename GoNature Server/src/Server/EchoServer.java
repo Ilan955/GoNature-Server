@@ -342,6 +342,7 @@ public class EchoServer extends AbstractServer {
 				int unexpectedVisitors=sq.howManyUnexpectedVisitorsInPark(result[0]);
 				int maxAvailableVisitors=sq.howManyAllowedInPark(result[0]);
 				int maxVisitors=sq.howManyMaxvisitorsAllowedInPark(result[0]);
+				float maxDuration=sq.howmanyTimeEveryVisitorInPark(result[0]);
 				sb= new StringBuffer();
 				sb.append("ParkController");
 				sb.append(" ");
@@ -354,12 +355,30 @@ public class EchoServer extends AbstractServer {
 				sb.append(Integer.toString(maxAvailableVisitors));
 				sb.append(" ");
 				sb.append(Integer.toString(maxVisitors));
+				sb.append(" ");
+				sb.append(Float.toString(maxDuration));
 				client.sendToClient(sb.toString());
-
 				break;
-
+			case "setNumOfVisitorEntringPark":
+				sq.updateUnexpectedVisitors(result);
+				client.sendToClient(done);
+				break;
+				
+			case "setCurrentVisitros":
+				sq.updateCurrentVisitors(result);
+				client.sendToClient(done);
+				break;
+				
 			case "enterWithoutOrder":
 				sq.insertTravellerInPark(result);
+				client.sendToClient(done);
+				break;	
+			case "updateExitTimeForTravellerWithOrder":
+				sq.enterExitTimeForTravellerWithOrder(result);
+				client.sendToClient(done);
+				break;
+			case "updateExitTimeForcasualTraveller":
+				sq.enterExitTimeForcasualTraveller(result);
 				client.sendToClient(done);
 				break;
 				//////Reports start/////
@@ -401,15 +420,37 @@ public class EchoServer extends AbstractServer {
 				
 			case "changeStatusForCasualTraveller":
 				sq.changeRequestStatusForCasualTraveller(result);
+				client.sendToClient(done);
+				break;
+	
+			case "enterDateofFullCapcityPark":
+				sq.insertfullcapacityPark(result);
+				client.sendToClient(done);
+				break;
+			case "checkIfThisDateInFullCapacityTable":
+				sq.isDateInfullcapacityExists(result);
 				sb = new StringBuffer();
-				sb.append("RequestsController");
+				sb.append("ParkController");
 				sb.append(" ");
-				sb.append("getRequestsTravellerOfEnterPark");
+				sb.append("checkIfThisDateInFullCapacityTable");
 				sb.append(" ");
-				sb.append(done);
+				sb.append(result);
 				client.sendToClient(sb.toString());
 				break;
-
+			case "updateStatusForCapacityParkToFull":
+				sq.changeStatusForCapacityParkToFull(result);
+				client.sendToClient(done);
+				break;
+			case "getTableOfUnFullCapacityInDates":
+				String st1 = sq.getUnFullCapacityTableInDates(result);
+				sb = new StringBuffer();
+				sb.append("ReportsController");
+				sb.append(" ");
+				sb.append("getTableOfUnFullCapacityInDates");
+				sb.append(" ");
+				sb.append(st1);
+				client.sendToClient(sb.toString());
+				break;
 			default:
 				System.out.println("Sorry, don't know what you presse Now");
 
@@ -462,7 +503,7 @@ public class EchoServer extends AbstractServer {
 
 		try {
 
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "root");
 
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
