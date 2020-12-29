@@ -478,13 +478,13 @@ public class sqlConnector {
 
 	public int howManyForCurrentTimeAndDate(String[] result) throws ParseException {
 		Statement stm;
-		LocalDate wanted1 = LocalDate.parse(result[3]);
-		Date wanted = java.sql.Date.valueOf(wanted1);
+		
+		
 
 		int counter = 0;
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT numOfVisitors,orderNum FROM gonaturedb.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? ");
+					"SELECT numOfVisitors,orderNum FROM gonaturedb.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? AND status= 'confirmed' OR status='entered' ");
 			ps.setString(1, result[2]);
 			ps.setString(3, result[0]);
 			ps.setString(4, result[1]);
@@ -539,7 +539,7 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			String[] s = userName.split(" "); // new row
-			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.employees WHERE userName = ?");
+			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.departmentemployee WHERE userName = ?");
 			stm = conn.createStatement();
 			ps.setString(1, s[0]);// new row
 			ps.executeQuery();
@@ -556,7 +556,7 @@ public class sqlConnector {
 		String check[] = empID.split(" ");
 		String[] s = new String[12];
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.employees WHERE userName = ?");
+			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.departmentemployee WHERE userName = ?");
 			stm = conn.createStatement();
 			ps.setString(1, check[0]);
 			ResultSet rs = ps.executeQuery();
@@ -580,22 +580,21 @@ public class sqlConnector {
 		return s;
 	}
 
-	public void cancelOrder(String[] result) {
+	public void changeStatusOfOrder(String[] result,String status) {
 		Statement stm;
 
 		try {
-			PreparedStatement ps = conn.prepareStatement(
-					"DELETE FROM gonaturedb.order WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
-			ps.setString(1, result[0]);
-			ps.setString(2, result[1]);
-			ps.setString(3, result[2]);
-			ps.setString(4, result[3]);
+			PreparedStatement ps = conn.prepareStatement("UPDATE gonaturedb.order SET status=? WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+			ps.setString(1, status);
+			ps.setString(2, result[0]);
+			ps.setString(3, result[1]);
+			ps.setString(4, result[2]);
+			ps.setString(5, result[3]);
 			ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
-
+			
 		}
-
 	}
 
 	public String getOrders(String iD) {
@@ -627,8 +626,8 @@ public class sqlConnector {
 		int unexpectedVisitors = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn
-					.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE parkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE parkName=?");
+
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -713,7 +712,9 @@ public class sqlConnector {
 			s[9] = ("" + temp);
 			if (s[5] == null) {
 				s[1] = "IdentifyNotExistingTraveller";
+
 				s[5] = "" + travellerID;
+
 			}
 			// System.out.print(rs.getString(i).toString());
 		} catch (SQLException e) {
@@ -761,8 +762,8 @@ public class sqlConnector {
 	public void updateUnexpectedVisitors(String[] msg) {
 		Statement stm;
 		try {
-			PreparedStatement ps = conn
-					.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE parkName=?");
+			PreparedStatement ps = conn.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE parkName=?");
+
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.executeUpdate();
@@ -770,10 +771,45 @@ public class sqlConnector {
 			e.printStackTrace();
 		}
 	}
-	
-	
-	
-	
+
+	public void updateCurrentVisitors(String[] msg) {
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement("UPDATE project.park SET currentVisitors=? WHERE ParkName=?");
+			ps.setString(1, msg[0]);
+			ps.setString(2, msg[1]);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void enterExitTimeForTravellerWithOrder(String[] msg) {
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"UPDATE project.order SET ExitTime=TIME_FORMAT(curtime(), '%h:%i') WHERE wantedPark=? AND DateOfVisit=curdate() AND ID=? AND atatus=\"in park\" ");
+			ps.setString(1, msg[0]);
+			ps.setString(2, msg[1]);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void enterExitTimeForcasualTraveller(String[] msg) {
+		Statement stm;
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"UPDATE project.travellerinpark SET exitTime=TIME_FORMAT(curtime(), '%h:%i') WHERE wantedPark=? AND DateOfVisit=curdate() AND ID=? ");
+			ps.setString(1, msg[0]);
+			ps.setString(2, msg[1]);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void insertRequest(String[] result) {
 		Statement stm;
 		LocalDate wanted1 = LocalDate.parse(result[1]);
@@ -795,15 +831,16 @@ public class sqlConnector {
 		}
 
 	}
-	public int IsApproveEnterParkForTraveller(String[] result)
-	{
+
+	public int IsApproveEnterParkForTraveller(String[] result) {
 		String res;
 		int status = -1;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT status FROM project.requests WHERE idOfAsks=? AND type=? ");
-			ps.setString(1, result[0]); //ID
-			ps.setString(2, result[1]); //type
+			PreparedStatement ps = conn
+					.prepareStatement("SELECT status FROM project.requests WHERE idOfAsks=? AND type=? ");
+			ps.setString(1, result[0]); // ID
+			ps.setString(2, result[1]); // type
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -816,6 +853,7 @@ public class sqlConnector {
 		}
 		return status;
 	}
+
 	public String getRequestTableOfEnterPark(String park) {
 		Statement stm;
 		StringBuffer s = new StringBuffer();
@@ -838,20 +876,21 @@ public class sqlConnector {
 
 		return s.toString();
 	}
+
 	public void changeRequestStatusForCasualTraveller(String[] msg) {
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("UPDATE project.requests SET status=? WHERE IdOfAsks=? AND wantedpark=? and dateOfRequest=curdate() and type=\"EnterPark\"");
-			ps.setString(1, msg[0]); //status
-			ps.setString(2, msg[1]); //ID
-			ps.setString(3, msg[2]); //park
+			PreparedStatement ps = conn.prepareStatement(
+					"UPDATE project.requests SET status=? WHERE IdOfAsks=? AND wantedpark=? and dateOfRequest=curdate() and type=\"EnterPark\"");
+			ps.setString(1, msg[0]); // status
+			ps.setString(2, msg[1]); // ID
+			ps.setString(3, msg[2]); // park
 			ps.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
 	}
-	
 
 	public void insertTravellerInPark(String[] result) {
 		Statement stm;
@@ -874,6 +913,82 @@ public class sqlConnector {
 
 		}
 
+	}
+
+	public void insertfullcapacityPark(String[] result) {
+		Statement stm;
+		LocalDate wanted1 = LocalDate.parse(result[1]);
+		Date wanted = java.sql.Date.valueOf(wanted1);
+
+		try {
+			PreparedStatement ps = conn
+					.prepareStatement("INSERT INTO project.fullcapacity(park,date,full) VALUES (?,?,?)");
+			ps.setString(1, result[0]); // park
+			ps.setDate(2, wanted); // Date
+			ps.setString(1, result[2]);
+			ps.execute();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+
+		}
+
+	}
+
+	public boolean isDateInfullcapacityExists(String[] msg) {
+		Statement stm;
+		try {
+
+			PreparedStatement ps = conn
+					.prepareStatement("SELECT * FROM project.fullcapacity WHERE park=? AND Date=curdate()");
+			stm = conn.createStatement();
+			ps.setString(1, msg[0]);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				return false;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+
+		}
+		return true;
+	}
+
+	public void changeStatusForCapacityParkToFull(String[] msg) {
+		Statement stm;
+		try {
+			PreparedStatement ps = conn
+					.prepareStatement("UPDATE project.fullcapacity SET full=1 WHERE park=? and date=curdate()");
+			ps.setString(1, msg[0]); // park
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public String getUnFullCapacityTableInDates(String[] msg) {
+		Statement stm;
+		StringBuffer s = new StringBuffer();
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT date FROM project.fullcapacity WHERE month(date)=? and year(date)=? and park=? and full=0");
+			ps.setString(1, msg[0]);// month
+			ps.setString(2, msg[1]);// year
+			ps.setString(3, msg[2]); // park
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+					s.append(rs.getString(1));
+					s.append(" ");
+				}
+		} catch (SQLException e) {
+			e.printStackTrace();
+
+		}
+		s.append("Done");
+
+		return s.toString();
 	}
 
 	////// Reports start/////
@@ -1027,6 +1142,7 @@ public class sqlConnector {
 	}
 	////// Reports end/////
 
+
 	public boolean updateParkChangeRequestStatus(String string) {
 		
 		Statement stm;
@@ -1057,5 +1173,29 @@ public class sqlConnector {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	public int checkHowManyCancelled(String[] result,String status) {
+		Statement stm;
+		int counter=0;
+	
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT * from gonaturedb.order WHERE status = ? AND DateOfVisit BETWEEN ? AND ?");
+	
+			ps.setString(1, status); 
+			ps.setString(2, result[0]); 
+			ps.setString(3, result[1]); 
+			
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				counter++;
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+
+		}
+		return counter;
 	}
 }
