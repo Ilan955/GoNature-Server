@@ -477,13 +477,13 @@ public class sqlConnector {
 
 	public int howManyForCurrentTimeAndDate(String[] result) throws ParseException {
 		Statement stm;
-		LocalDate wanted1 = LocalDate.parse(result[3]);
-		Date wanted = java.sql.Date.valueOf(wanted1);
+		
+		
 
 		int counter = 0;
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT numOfVisitors,orderNum FROM gonaturedb.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? ");
+					"SELECT numOfVisitors,orderNum FROM gonaturedb.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? AND status= 'confirmed' OR status='entered' ");
 			ps.setString(1, result[2]);
 			ps.setString(3, result[0]);
 			ps.setString(4, result[1]);
@@ -579,22 +579,21 @@ public class sqlConnector {
 		return s;
 	}
 
-	public void cancelOrder(String[] result) {
+	public void changeStatusOfOrder(String[] result,String status) {
 		Statement stm;
 
 		try {
-			PreparedStatement ps = conn.prepareStatement(
-					"DELETE FROM gonaturedb.order WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
-			ps.setString(1, result[0]);
-			ps.setString(2, result[1]);
-			ps.setString(3, result[2]);
-			ps.setString(4, result[3]);
+			PreparedStatement ps = conn.prepareStatement("UPDATE gonaturedb.order SET status=? WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+			ps.setString(1, status);
+			ps.setString(2, result[0]);
+			ps.setString(3, result[1]);
+			ps.setString(4, result[2]);
+			ps.setString(5, result[3]);
 			ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
-
+			
 		}
-
 	}
 
 	public String getOrders(String iD) {
@@ -933,4 +932,32 @@ public class sqlConnector {
 		return sb.toString();
 	}
 	////// Reports end/////
+
+	public int checkHowManyCancelled(String[] result,String status) {
+		Statement stm;
+		int counter=0;
+	
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT * from gonaturedb.order WHERE status = ? AND DateOfVisit BETWEEN ? AND ?");
+	
+			ps.setString(1, status); 
+			ps.setString(2, result[0]); 
+			ps.setString(3, result[1]); 
+			
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				counter++;
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+
+		}
+		return counter;
+	}
+
+
+
+	
 }
