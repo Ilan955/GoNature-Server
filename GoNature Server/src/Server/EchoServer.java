@@ -322,9 +322,25 @@ public class EchoServer extends AbstractServer {
 			 * This method will search for the order and delete it
 			 */
 			case "cancelOrder":
-				sq.cancelOrder(result);
+				sq.changeStatusOfOrder(result,"cancelled");
 				client.sendToClient(done);
 				break;
+				
+			case "getDataForReport":
+				int cancelledOrderNumber = sq.checkHowManyCancelled(result,"canceled");
+				int notEnteredOrderNumber = sq.checkHowManyCancelled(result,"confirmed");
+				
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("getDataForReport");
+				sb.append(" ");
+				sb.append(Integer.toString(cancelledOrderNumber));
+				sb.append(" ");
+				sb.append(Integer.toString(notEnteredOrderNumber));
+				client.sendToClient(sb.toString());
+				break;
+				
 			case "getExsistingOrders":
 				String res1 = sq.getOrders(result[0]);
 				sb = new StringBuffer();
@@ -335,7 +351,10 @@ public class EchoServer extends AbstractServer {
 				sb.append(res1);
 				client.sendToClient(sb.toString());
 				break;
-
+			case "ChangeToWaitOrder":
+				sq.changeStatusOfOrder(result, "waiting");
+				client.sendToClient(done);
+				break;
 			case "DetailsPark":
 
 				int currentVisitors=sq.howManyCurrentvisitorsForOrdersInPark(result[0]);
@@ -409,7 +428,10 @@ public class EchoServer extends AbstractServer {
 				sb.append(done);
 				client.sendToClient(sb.toString());
 				break;
-
+			case "setEnterOrder" : 
+				sq.changeStatusOfOrder(result, "Entered");
+				client.sendToClient(done);
+				break; 
 			default:
 				System.out.println("Sorry, don't know what you presse Now");
 
