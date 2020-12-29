@@ -77,7 +77,7 @@ public class EchoServer extends AbstractServer {
 		 * 
 		 */
 		String[] bar_String;
-
+		String sendMe;
 		String done = "Done";
 		int flag = 0;
 		String st = (String) msg;
@@ -176,9 +176,11 @@ public class EchoServer extends AbstractServer {
 				break;
 			case "getTravellerDetails":
 
-				if (sq.canGetTraveller(result[0])) {
-					// System.out.print(result[0]);
-					bar_String = new String[11];
+
+				if (sq.canGetTraveller(result[0]))
+				{
+					//System.out.print(result[0]);
+					bar_String = new String[12];
 
 					bar_String = sq.getTravellerFromDB(result[0]);
 					sb = new StringBuffer();
@@ -186,11 +188,40 @@ public class EchoServer extends AbstractServer {
 						sb.append(bar_String[i]);
 						sb.append(" ");
 					}
-					String sendMe = sb.toString();
+					sendMe = sb.toString();
 					// System.out.print(sb4.toString());
 					client.sendToClient(sendMe);
 				}
+				break;
 
+			case "updateParkChangeRequestStatus": //xxxxxxxxxxx
+					if(sq.updateParkChangeRequestStatus(result[0]))
+					{
+						client.sendToClient("ChangeIsSababa ");
+					}
+					break;
+			case "updateParkChangesWhenPressedApprove":
+				if (sq.updateParkChangesInParkTable(result[0],result[1],result[2],result[3]))
+				{
+					client.sendToClient("parkSettingsAreUpdated ");
+				}
+			case "getParkSettingsRequestsFromDB"://#TRY$%YTRGFG%^Y%^#H
+				String send = sq.getParkSettingsRequests();
+				client.sendToClient(send);
+				break;
+			case "SendParkChangesToDepartmentManager":
+				bar_String = new String[3];
+				bar_String[0] = "RequestsController";
+				bar_String[1] = "parkSettingsChangesSent";
+				bar_String[2] = sq.sendParkSettingsRequestToDepManager(result);
+				sb = new StringBuffer();
+				for (int i=0;i<bar_String.length;i++)
+				{
+					sb.append(bar_String[i]);
+					sb.append(" ");
+				}
+				sendMe = sb.toString();
+				client.sendToClient(sendMe);
 				break;
 
 			case "exit":
