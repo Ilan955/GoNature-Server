@@ -958,7 +958,7 @@ public class sqlConnector {
 		}
 		return "true";
 	}
-	public int sendNewRequestID() {
+	public int sendNewRequestID() { // xxxxxxxxxxx
 		Statement stm;
 		int i = 0;
 		try {
