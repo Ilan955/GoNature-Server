@@ -147,6 +147,7 @@ public class EchoServer extends AbstractServer {
 				break;
 
 			case "addMember":
+
 				sb3 = new StringBuffer();
 				sb3.append("SignUpController");
 				sb3.append(" ");
@@ -155,6 +156,7 @@ public class EchoServer extends AbstractServer {
 				sb3.append(sq.addMember(result));
 				client.sendToClient(sb3.toString());
 				break;
+
 
 			case "getEmployeeDetails":
 				if (sq.canGetEmployee(result[0])) {

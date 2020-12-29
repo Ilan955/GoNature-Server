@@ -192,7 +192,7 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			/* get park maxDuration time */
-			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park where ParkName = ?;");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park where parkName = ?;");
 			ps.setString(1, result[0]);// parkName
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -458,8 +458,10 @@ public class sqlConnector {
 		int counter = 0;
 		Statement stm;
 		try {
+
 			PreparedStatement ps = conn
 					.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE ParkName=?");
+
 			ps.setString(1, parkName);
 
 			ResultSet rs = ps.executeQuery();
@@ -477,8 +479,6 @@ public class sqlConnector {
 
 	public int howManyForCurrentTimeAndDate(String[] result) throws ParseException {
 		Statement stm;
-		
-		
 
 		int counter = 0;
 		try {
@@ -538,7 +538,8 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			String[] s = userName.split(" "); // new row
-			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.departmentemployee WHERE userName = ?");
+			PreparedStatement ps = conn
+					.prepareStatement("SELECT *  FROM project.departmentemployee WHERE userName = ?");
 			stm = conn.createStatement();
 			ps.setString(1, s[0]);// new row
 			ps.executeQuery();
@@ -579,11 +580,12 @@ public class sqlConnector {
 		return s;
 	}
 
-	public void changeStatusOfOrder(String[] result,String status) {
+	public void changeStatusOfOrder(String[] result, String status) {
 		Statement stm;
 
 		try {
-			PreparedStatement ps = conn.prepareStatement("UPDATE gonaturedb.order SET status=? WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+			PreparedStatement ps = conn.prepareStatement(
+					"UPDATE gonaturedb.order SET status=? WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
 			ps.setString(1, status);
 			ps.setString(2, result[0]);
 			ps.setString(3, result[1]);
@@ -592,7 +594,7 @@ public class sqlConnector {
 			ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 	}
 
@@ -625,8 +627,10 @@ public class sqlConnector {
 		int unexpectedVisitors = 0;
 		Statement stm;
 		try {
+
 			PreparedStatement ps = conn
 					.prepareStatement("SELECT AmountOfUnExpectedVisitors FROM project.park WHERE ParkName=?");
+
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -646,7 +650,7 @@ public class sqlConnector {
 		int currentvisitors = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT currentVisitors FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT currentVisitors FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -666,7 +670,7 @@ public class sqlConnector {
 		int Maxvisitors = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT maxVisitors FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxVisitors FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -741,7 +745,7 @@ public class sqlConnector {
 		float time = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park WHERE ParkName=?");
+			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park WHERE parkName=?");
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
@@ -759,8 +763,10 @@ public class sqlConnector {
 	public void updateUnexpectedVisitors(String[] msg) {
 		Statement stm;
 		try {
+
 			PreparedStatement ps = conn
 					.prepareStatement("UPDATE project.park SET AmountOfUnExpectedVisitors=? WHERE ParkName=?");
+
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.executeUpdate();
@@ -976,9 +982,9 @@ public class sqlConnector {
 			ps.setString(3, msg[2]); // park
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-					s.append(rs.getString(1));
-					s.append(" ");
-				}
+				s.append(rs.getString(1));
+				s.append(" ");
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 
@@ -1049,20 +1055,20 @@ public class sqlConnector {
 	}
 	////// Reports end/////
 
-	public int checkHowManyCancelled(String[] result,String status) {
+	public int checkHowManyCancelled(String[] result, String status) {
 		Statement stm;
-		int counter=0;
-	
+		int counter = 0;
+
 		try {
 			PreparedStatement ps = conn.prepareStatement(
 					"SELECT * from gonaturedb.order WHERE status = ? AND DateOfVisit BETWEEN ? AND ?");
-	
-			ps.setString(1, status); 
-			ps.setString(2, result[0]); 
-			ps.setString(3, result[1]); 
-			
+
+			ps.setString(1, status);
+			ps.setString(2, result[0]);
+			ps.setString(3, result[1]);
+
 			ResultSet rs = ps.executeQuery();
-			while(rs.next()) {
+			while (rs.next()) {
 				counter++;
 			}
 
@@ -1073,7 +1079,4 @@ public class sqlConnector {
 		return counter;
 	}
 
-
-
-	
 }
