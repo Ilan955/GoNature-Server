@@ -245,7 +245,7 @@ public class sqlConnector {
 				ps.setString(1, msg[i]);// orderToWaitFor
 				ResultSet rs = ps.executeQuery();
 				while (rs.next())
-					cnt++; // count how many orders alredy wait for this orderToWaitFor
+					cnt++; // count how many orders already wait for this orderToWaitFor
 
 				/* enter orderToAdd to waitinglist */
 				ps = conn.prepareStatement(
@@ -994,18 +994,20 @@ public class sqlConnector {
 		return s.toString();
 	}
 
-	////// Reports start/////
-	public String getVisitorsDataReport(String[] monthYear) {
-		String month = monthYear[0];
-		String year = monthYear[1];
+	///////////////////////////// Reports start /////////////////////////////
+	public String getVisitorsDataReport(String[] monthYearPark) {
+		String month = monthYearPark[0];
+		String year = monthYearPark[1];
+		String park = monthYearPark[2];
 		StringBuffer sb = new StringBuffer();
 		Statement stm;
 		int sumSolo = 0, sumMembers = 0, sumGroups = 0;
 		try {// try to get travellers with out order
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT numOfVisitors FROM project.travellerinpark WHERE MONTH(Date)=? AND YEAR(Date)=?");
-			ps.setString(1, month);
-			ps.setString(2, year);
+					"SELECT numOfVisitors FROM project.travellerinpark WHERE wantedPark=? AND MONTH(Date)=? AND YEAR(Date)=?");
+			ps.setString(1, park);
+			ps.setString(2, month);
+			ps.setString(3, year);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -1018,9 +1020,10 @@ public class sqlConnector {
 		}
 		try {// try to get members and family members with order
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT numOfVisitors FROM project.order WHERE MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed' AND (type='Member' OR type='Family Member') ");
-			ps.setString(1, month);
-			ps.setString(2, year);
+					"SELECT numOfVisitors FROM project.order WHERE wantedPark=? AND MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed' AND (type='Member' OR type='Family Member') ");
+			ps.setString(1, park);
+			ps.setString(2, month);
+			ps.setString(3, year);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -1033,9 +1036,10 @@ public class sqlConnector {
 		}
 		try {// try to get Groups members with order
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT numOfVisitors FROM project.order WHERE MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed' AND type='Group Guide' ");
-			ps.setString(1, month);
-			ps.setString(2, year);
+					"SELECT numOfVisitors FROM project.order WHERE wantedPark=? AND MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed' AND type='Group Guide' ");
+			ps.setString(1, park);
+			ps.setString(2, month);
+			ps.setString(3, year);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -1053,7 +1057,55 @@ public class sqlConnector {
 		sb.append(sumGroups);
 		return sb.toString();
 	}
-	////// Reports end/////
+
+	////////////////// Entrance and Stay Report ////////////////////
+	public String getEntranceAndStay(String[] monthYearPark) {
+		String month = monthYearPark[0];
+		String year = monthYearPark[1];
+		String park = monthYearPark[2];
+		StringBuffer sb = new StringBuffer();
+		Statement stm;
+		int sumSolo = 0, sumMembers = 0, sumGroups = 0;
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT numOfVisitors,enterTime,exitTime FROM project.travellerinpark WHERE wantedPark=? AND MONTH(Date)=? AND YEAR(Date)=?");
+			ps.setString(1, park);
+			ps.setString(2, month);
+			ps.setString(3, year);
+			stm = conn.createStatement();
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				sb.append(rs.getInt("numOfVisitors") + " " + "traveller" + rs.getString("enterTime") + " "
+						+ rs.getString("exitTime")+" ");
+			}
+			rs.close();
+		} catch (SQLException e) {
+			System.out.println("Fail to get visitors data");
+			e.printStackTrace();
+		}
+		try {// try to get Groups members with order
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT numOfVisitors FROM project.order WHERE wantedPark=? AND MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed'");
+			ps.setString(1, park);
+			ps.setString(2, month);
+			ps.setString(3, year);
+			stm = conn.createStatement();
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				sb.append(rs.getInt("numOfVisitors") + " " + rs.getString("type") + rs.getString("enterTime") + " "
+						+ rs.getString("exitTime")+" ");
+			}
+			rs.close();
+		} catch (SQLException e) {
+			System.out.println("Fail to get members and group guides data");
+			e.printStackTrace();
+		}
+		
+		sb.append("Done");
+		return sb.toString();
+	}
+
+/////////////////////////////  Reports end ///////////////////////////// 
 
 	public int checkHowManyCancelled(String[] result, String status) {
 		Statement stm;

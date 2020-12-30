@@ -157,7 +157,6 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(sb3.toString());
 				break;
 
-
 			case "getEmployeeDetails":
 				if (sq.canGetEmployee(result[0])) {
 					bar_String = new String[12];
@@ -400,6 +399,16 @@ public class EchoServer extends AbstractServer {
 				sb.append("ReportsController");
 				sb.append(" ");
 				sb.append("getData");
+				sb.append(" ");
+				sb.append(ans);
+				client.sendToClient(sb.toString());
+				break;
+			case "getDataEntranceTimesAndStay":
+				ans = sq.getEntranceAndStay(result);
+				sb = new StringBuffer();
+				sb.append("ReportsController");
+				sb.append(" ");
+				sb.append("getDataEntranceTimesAndStay");
 				sb.append(" ");
 				sb.append(ans);
 				client.sendToClient(sb.toString());
