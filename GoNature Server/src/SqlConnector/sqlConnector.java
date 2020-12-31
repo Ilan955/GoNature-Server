@@ -9,7 +9,6 @@ import java.sql.Statement;
 import java.sql.Time;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 
 public class sqlConnector {
@@ -1065,18 +1064,18 @@ public class sqlConnector {
 		String park = monthYearPark[2];
 		StringBuffer sb = new StringBuffer();
 		Statement stm;
-		int sumSolo = 0, sumMembers = 0, sumGroups = 0;
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT numOfVisitors,enterTime,exitTime FROM project.travellerinpark WHERE wantedPark=? AND MONTH(Date)=? AND YEAR(Date)=?");
+					"SELECT numOfVisitors,enterTime,exitTime,Date FROM project.travellerinpark WHERE wantedPark=? AND MONTH(Date)=? AND YEAR(Date)=?");
 			ps.setString(1, park);
 			ps.setString(2, month);
 			ps.setString(3, year);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				sb.append(rs.getInt("numOfVisitors") + " " + "traveller" + rs.getString("enterTime") + " "
-						+ rs.getString("exitTime")+" ");
+				sb.append(rs.getInt("numOfVisitors") + " " + "traveller" + " " + rs.getString("enterTime") + " "
+						+ rs.getString("exitTime") + " " + rs.getString("Date") + " ");
+
 			}
 			rs.close();
 		} catch (SQLException e) {
@@ -1085,22 +1084,22 @@ public class sqlConnector {
 		}
 		try {// try to get Groups members with order
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT numOfVisitors FROM project.order WHERE wantedPark=? AND MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed'");
+					"SELECT numOfVisitors, type, enterTime, exitTime,DateOfVisit FROM project.order WHERE wantedPark=? AND MONTH(DateOfVisit)=? AND YEAR(DateOfVisit)=? AND status='Confirmed'");
 			ps.setString(1, park);
 			ps.setString(2, month);
 			ps.setString(3, year);
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				sb.append(rs.getInt("numOfVisitors") + " " + rs.getString("type") + rs.getString("enterTime") + " "
-						+ rs.getString("exitTime")+" ");
+				sb.append(rs.getInt("numOfVisitors") + " " + rs.getString("type") + " " + rs.getString("enterTime")
+						+ " " + rs.getString("exitTime") + " " + rs.getString("DateOfVisit") + " ");
 			}
 			rs.close();
 		} catch (SQLException e) {
 			System.out.println("Fail to get members and group guides data");
 			e.printStackTrace();
 		}
-		
+
 		sb.append("Done");
 		return sb.toString();
 	}
