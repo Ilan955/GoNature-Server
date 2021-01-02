@@ -13,7 +13,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Vector;
 
-import Client.ClientUI;
+
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -47,7 +47,7 @@ public class EchoServer extends AbstractServer {
 	final public static int DEFAULT_PORT = 5555;
 	private Connection conn;
 	static sqlConnector sq;
-	public waitingListController_server server_waitingListController;
+	public WaitingListController_server server_waitingListController;
 
 
 	// Constructors ****************************************************
@@ -660,15 +660,12 @@ public class EchoServer extends AbstractServer {
 		}
 
 		try {
-
-
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
-
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root","");
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
-      UtilityThread ut= new UtilityThread();
+			UtilityThread ut= new UtilityThread();
 			ut.start();
-			server_waitingListController = new waitingListController_server(sq);
+			server_waitingListController = new WaitingListController_server(sq);
 
 
 		} catch (SQLException ex) {/* handle any errors */
