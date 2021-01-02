@@ -115,7 +115,7 @@ public class sqlConnector {
 		try {
 			PreparedStatement ps = conn.prepareStatement(
 
-					"INSERT project.person SET ID=? ,firstName=?, lastName=?, phoneNumber=? ,Email=? ,creditCardNum=? ,maxFamilyMembers=? ,memberId=?");
+					"INSERT project.person SET ID=? ,firstName=?, lastName=?, phoneNumber=? ,Email=? ,creditCardNum=? ,Type=? ,maxFamilyMembers=?,memberId=?");
 
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
@@ -124,7 +124,8 @@ public class sqlConnector {
 			ps.setString(5, msg[4]);
 			ps.setString(6, msg[5]);
 			ps.setString(7, msg[6]);
-			ps.setString(8, memberCNT);
+			ps.setString(8, msg[7]);
+			ps.setString(9, memberCNT);
 			ps.executeUpdate();
 			System.out.println(memberCNT);
 			return memberCNT.toString();
