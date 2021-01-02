@@ -1,12 +1,17 @@
+package Server;
 import java.io.IOException;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+
 import Entities.Order;
-import WaitingListController_server.watingList_Confirmation_thread;
+import SqlConnector.sqlConnector;
+
 public class WaitingListController_server {
 	private sqlConnector sq;
 
-	public waitingListController_server(sqlConnector sq) {
+	public WaitingListController_server(sqlConnector sq) {
 		this.sq = sq;
 	}
 
@@ -30,53 +35,58 @@ public class WaitingListController_server {
 			for (Order o : ordersInLine){
 				/*check if ordersInLine was changed*/
 				if(sq.IsOrderInWaitingList(o.getOrderNum()))
-					if (canMakeOrder(o.getTimeInPark(), o.getDateOfVisit(), o.getWantedPark(), o.getNumberOfVisitors())) {
-							/* remove from waitingList DB */
-						if (!removeFromWaitingList(o.getOrderNum())) {
-							System.out.println("sql remove ERROR!\n");
-							return;
-							}
-		
-						/*TODO send Message  */
-							System.out.println("Message from waitingList : orderNum" + o.getOrderNum() + " please confirm your order");
+					try {
+						if (canMakeOrder(o.getTimeInPark(), o.getDateOfVisit(), o.getWantedPark(), o.getNumberOfVisitors())) {
+								/* remove from waitingList DB */
+							if (!removeFromWaitingList(o.getOrderNum())) {
+								System.out.println("sql remove ERROR!\n");
+								return;
+								}
+
+							/*TODO send Message  */
+								System.out.println("Message from waitingList : orderNum" + o.getOrderNum() + " please confirm your order");
+								
+							now = LocalTime.now(); //message sent time of order o
+							limit = now.plusHours(1); // traveler as to confirm within 1 hour
 							
-						now = LocalTime.now(); //message sent time of order o
-						limit = now.plusHours(1); // traveler as to confirm within 1 hour
-						
-						while(true) {
-							try 
-							{
-								Thread.sleep(1000 * 60);// 1 minute sleep 
-							}
-							catch(InterruptedException e) 
-							{ //(check confirmation status every minute)
-								confirmation = sq.check_Confirmation(o.getOrderNum());
-								now = LocalTime.now(); // Cur Time
-								if(limit.compareTo(now) < 0 || confirmation.equals("f")) // now is after limit OR traveler chose to cancel 
+							while(true) {
+								try 
 								{
-									/*Cancel order in orders table DB*/
-									if(confirmation.equals("f")) {
-										//TODO Manual cancelation
-										break; // Go to next waiting order
-									}
-									else if (limit.compareTo(now) < 0) {
-										//TODO Automatic cancelation (1 hour passed) 
-										break; // Go to next waiting order
-									}
+									Thread.sleep(1000 * 60);// 1 minute sleep 
 								}
-								if(confirmation.equals("t")) {
-									/*user confirmed order successfully (Before limit time)*/
-									//TODO change order status in orders table DB
-									return; // no more waiters to check (end of thread)
-								}
-							}//catch
-						}//while
+								catch(InterruptedException e) 
+								{ //(check confirmation status every minute)
+									confirmation = sq.check_Confirmation(o.getOrderNum());
+									now = LocalTime.now(); // Cur Time
+									if(limit.compareTo(now) < 0 || confirmation.equals("f")) // now is after limit OR traveler chose to cancel 
+									{
+										/*Cancel order in orders table DB*/
+										if(confirmation.equals("f")) {
+											//TODO Manual cancelation
+											break; // Go to next waiting order
+										}
+										else if (limit.compareTo(now) < 0) {
+											//TODO Automatic cancelation (1 hour passed) 
+											break; // Go to next waiting order
+										}
+									}
+									if(confirmation.equals("t")) {
+										/*user confirmed order successfully (Before limit time)*/
+										//TODO change order status in orders table DB
+										return; // no more waiters to check (end of thread)
+									}
+								}//catch
+							}//while
+						}
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}//if
 			}//for
 		}// run
 	}// (inner class) watingList_Confirmation_thread 
 	
-	public boolean canMakeOrder(LocalTime time, LocalDate dateOfVisit, String wantedPark, int numOfVisitors) {
+	public boolean canMakeOrder(LocalTime time, LocalDate dateOfVisit, String wantedPark, int numOfVisitors) throws ParseException {
 		LocalTime openingTime = LocalTime.of(8, 0);
 		LocalTime closingTime = LocalTime.of(23, 30);
 		LocalTime turn = LocalTime.of(11, 00);
@@ -116,7 +126,7 @@ public class WaitingListController_server {
 		if (tmp.isBefore(closingTime))
 			to = tmp;
 
-		String msg = new String[4];
+		String[] msg = new String[4];
 		msg[0] = (from.toString()) + ":00"; // from
 		msg[1] = (to.toString()) + ":00";// to
 		msg[2] = wantedPark;// wantedPark
