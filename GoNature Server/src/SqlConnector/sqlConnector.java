@@ -21,6 +21,34 @@ public class sqlConnector {
 		this.conn = conn;
 	}
 
+
+/* update the park manager discount and wait for D_M confirmation */
+	public boolean updateManagerDiscount(String startDate, String lastDate, String precentage, String parkName) {
+		Statement stm;
+		PreparedStatement ps;
+		try {
+			ps = conn.prepareStatement(
+					"UPDATE project.managerdiscounts SET startDate=?, lastDate=?, precentage=?, status=?) WHERE parkName=?");
+			LocalDate start = LocalDate.parse(startDate);
+			Date startDate = java.sql.Date.valueOf(start);
+
+			LocalDate end = LocalDate.parse(lastDate);
+			Date endDate = java.sql.Date.valueOf(end);
+
+			ps.setString(5, parkName);// set park name
+			ps.setDate(1, startDate);// set start Date
+			ps.setDate(2, endDate);// set end Date
+			ps.setFloat(3, Float.valueOf(precentage));// set precentage (casting)
+			ps.setString(4, "F"); // set status , will be changed by D_M to T if approved
+			ps.executeUpdate();
+
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	public String[] CheckForId(String msg) {
 		Statement stm;
 		String[] s = new String[5];
@@ -86,24 +114,25 @@ public class sqlConnector {
 	}
 
 	public boolean addManagerDiscount(String[] msg) {
+
 		Statement stm;
+		PreparedStatement ps;
 		try {
-			PreparedStatement ps = conn.prepareStatement(
-					"insert into project.managerdiscounts (parkName, startDate, lastDate, precentage, status) values (?, ?, ?, ?, ?)");
-			// msg = [startDate , lastDate , precentage , parkName]
-			LocalDate start = LocalDate.parse(msg[0]);
+			ps = conn.prepareStatement(
+					"UPDATE project.managerdiscounts SET startDate=?, lastDate=?, precentage=?, status=?) WHERE parkName=?");
+			LocalDate start = LocalDate.parse(startDate);
 			Date startDate = java.sql.Date.valueOf(start);
 
-			LocalDate end = LocalDate.parse(msg[1]);
+			LocalDate end = LocalDate.parse(lastDate);
 			Date endDate = java.sql.Date.valueOf(end);
 
-			ps.setString(1, msg[3]);// set park name
-			ps.setDate(2, startDate);// set start Date
-			ps.setDate(3, endDate);// set end Date
-			ps.setFloat(4, Float.valueOf(msg[2]));// set precentage (casting)
-			ps.setString(5, "F"); // set status , will be changed by D_M to T if approved
-
+			ps.setString(5, parkName);// set park name
+			ps.setDate(1, startDate);// set start Date
+			ps.setDate(2, endDate);// set end Date
+			ps.setFloat(3, Float.valueOf(precentage));// set precentage (casting)
+			ps.setString(4, "F"); // set status , will be changed by D_M to T if approved
 			ps.executeUpdate();
+
 			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -130,10 +159,12 @@ public class sqlConnector {
 			ps.executeUpdate();
 			System.out.println(memberCNT);
 			return memberCNT.toString();
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return "false";
 		}
+
 
 	}
 
@@ -153,17 +184,20 @@ public class sqlConnector {
 			e.printStackTrace();
 		}
 		return i += 1000000002;
+
 	}
 
-	public String getManagerDiscount(String[] msg) {
-		/* works only for one row in DB */
-
+	public float getManagerDiscount(String parkName, String dateOfVisit) {
 		Statement stm;
+		Date visitDate = new Date(dateOfVisit);
 		try {
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.managerdiscounts WHERE parkName=? ");
+
+			ps.setString(1, parkName);
+			stm = conn.createtatement();
+
 			// msg = [parkName, dateOfVisit]
-			ps.setString(1, msg[0]);// parkName
-			stm = conn.createStatement();
+			
 			ResultSet rs = ps.executeQuery();
 			rs.next();
 			String discount = "";
@@ -196,33 +230,77 @@ public class sqlConnector {
 			PreparedStatement ps = conn.prepareStatement("SELECT maxDuration FROM project.park where parkName = ?;");
 			ps.setString(1, result[0]);// parkName
 			stm = conn.createStatement();
+
 			ResultSet rs = ps.executeQuery();
 			rs.next();
-			Time maxDuration = rs.getTime(1);
 
-			Time hour = java.sql.Time.valueOf(result[2]);// hour timeWantedVisit
-			Time before_visit = new Time(hour.getTime() - maxDuration.getTime()); // before_visit = hour - maxDuration
+			Date startDate = rs.getDate(2);
+			Date endDate = rs.getDate(3);
+			Float precentage = rs.getFloat(4);
+			String status = rs.getString(5);
 
-			/* get orderNum to wait for */
-			ps = conn.prepareStatement(
-					"SELECT orderNum FROM project.order where wantedPark = ? and numOfVisitors >=? and DateOfVisit = ? and (TimeInPark > ? and TimeInPark <= ?) and status = ?");
-			stm = conn.createStatement();
+			if (status.equals("F")) // discount is not confirmed by D_M
+				return -1; // invalid
 
-			ps.setString(1, result[0]);// parkName
-			ps.setString(2, result[3]);// numOfVisitors
-			ps.setString(3, result[1]);// dateOfVisit
-			ps.setString(4, before_visit.toString());// hour - maxDuration
-			ps.setString(5, result[2]);// hour
-			ps.setString(6, "confirmed");
+			if (startDate.before(visitDate) && endDate.after(visitDate)) // valid
+				return precentage;
 
-			String orderNUms = "";
+			if (startDate.equals(visitDate) || endDate.equals(visitDate)) // valid
+				return precentage;
+
+			return -1; // invalid
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+
+	}
+
+
+	public boolean addToWaitingList(String orderNum) {
+		Statement stm;
+		int cnt, i;
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"INSERT INTO `project`.`waitinglist` (`watingOrder`, `timestamp`) VALUES (?, 'NOW()')");
+			ps.setInt(1, orderNum);
+			ps.executeUpdate();
+			return true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+
+	}
+
+	/*
+	 * return sorted ArrayList<Order> of waiting orders where date =
+	 * canceledOrderDateOfVisit
+	 */
+	public ArrayList<Order> getSortedWatingOrders(String canceledOrder_DateOfVisit) {
+		Statement stm;
+		try {
+			ArrayList<Order> waitingOrders = new ArrayList<String>();
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT * FROM project.waitinglist join project.order ON project.waitinglist.watingOrder =  project.order.orderNum"
+							+ "where DateOfVisit = ?" + "ORDER BY timestamp;");
+			ps.setString(1,canceledOrder_DateOfVisit);
+			ResultSet rs = ps.executeQuery();
 
 			while (rs.next()) {
-				orderNUms += rs.getInt(1);
-				orderNUms += " ";
+				int orderNum = rs.getInt(5);
+				LocalTime time = (rs.getTime(7)).toLocalTime(); // rs.getTime(7) = TimeInPark
+				LocalDate dateOfVisit = (rs.getDate(8)).toLocalDate(); // rs.getDate(8) = DateOfVisit
+				String wantedPark = rs.getString(9);
+				int numberOfVisitors = rs.getInt(5);
+				float totalPrice = rs.get(10);
+				Order o = new Order(orderNum, time, dateOfVisit, wantedPark, numberOfVisitors, totalPrice);
+				waitingOrders.add(o);
 			}
 
-			return orderNUms;// splited by space
+			return waitingOrders;
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -231,169 +309,35 @@ public class sqlConnector {
 
 	}
 
-	public boolean addToWaitingList(String result) {
-		String msg[] = result.split(" ");
-		// msg = [orderToAdd[0] , ordersToWaitFor...]
-		Statement stm;
-		int cnt, i;
-		int numOf_ordersToWaitFor = msg.length - 1; // minus 1 because msg[0] = orderToAdd
-		try {
-			for (i = 1; i < numOf_ordersToWaitFor; i++) {
-				cnt = 0;
-				PreparedStatement ps = conn
-						.prepareStatement("SELECT * FROM project.waitinglist where orderToWaitFor = ?");
-				stm = conn.createStatement();
-				ps.setString(1, msg[i]);// orderToWaitFor
-				ResultSet rs = ps.executeQuery();
-				while (rs.next())
-					cnt++; // count how many orders alredy wait for this orderToWaitFor
-
-				/* enter orderToAdd to waitinglist */
-				ps = conn.prepareStatement(
-						"insert into project.waitinglist (orderToWaitFor, waitingOrder, placeInLine) values (?, ?, ?)");
-				ps.setString(1, msg[i]);// orderToWaitFor
-				ps.setString(2, msg[0]);// orderToAdd
-				ps.setString(3, String.valueOf(cnt));// index
-				ps.executeUpdate();
-			} // for
-
-			return true;
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
-
-	}
-
-	public String findOrderFirstInLine(String canceldOrderNum) {
-		Statement stm;
-		int orderNum_firstInLine = -1;
-		int minIndex = Integer.MAX_VALUE;
-		try {
-			PreparedStatement ps = conn.prepareStatement(
-					"SELECT watingOrder,placeInLine FROM project.waitinglist WHERE orderToWaitFor=? ");
-			ps.setString(1, canceldOrderNum);
-			stm = conn.createStatement();
-			ResultSet rs = ps.executeQuery();
-			while (rs.next()) {
-				if (rs.getInt(2) < minIndex)// placeInLine
-					orderNum_firstInLine = rs.getInt(1);// watingOrder
-			}
-
-			if (orderNum_firstInLine == -1) // there is no watingOrder for canceldOrderNum
-				return "null";
-
-			/* get orderNum_firstInLine details */
-			ps = conn.prepareStatement("SELECT * FROM project.order WHERE orderNum=?");
-			ps.setString(1, String.valueOf(orderNum_firstInLine));
-			stm = conn.createStatement();
-			rs = ps.executeQuery();
-			String orderToSend = "";
-			rs.next();
-			orderToSend += rs.getString(1);// ID
-			orderToSend += " ";
-			orderToSend += rs.getString(2);// type
-			orderToSend += " ";
-			orderToSend += rs.getString(3);// numOfVisitors
-			orderToSend += " ";
-			orderToSend += rs.getInt(4);// orderNum
-			orderToSend += " ";
-			orderToSend += rs.getTime(5);// timeInPark
-			orderToSend += " ";
-			orderToSend += rs.getDate(6);// DateOfVisit
-			orderToSend += " ";
-			orderToSend += rs.getString(4);// wantedPark
-			orderToSend += " ";
-			orderToSend += rs.getFloat(4);// totalPrice
-			orderToSend += " ";
-			orderToSend += rs.getString(4);// status
-
-			return orderToSend;
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return "null";
-		}
-
-	}
+	
 
 	public boolean removeFromWaitingList(String orderToRemove) {
-		/* find all rows of orderToRemove */
 		Statement stm;
-		String orderToWaitFor = "";
-		String orderToWaitFor_arr[];
-		int i;
 		try {
-			PreparedStatement ps = conn
-					.prepareStatement("SELECT orderToWaitFor FROM project.waitinglist WHERE watingOrder=?");
-			ps.setString(1, orderToRemove);
+			PreparedStatement ps = conn.prepareStatement("DELETE FROM project.waitinglist WHERE watingOrder = ?");
 			stm = conn.createStatement();
-			ResultSet rs = ps.executeQuery();
-			while (rs.next()) {
-				orderToWaitFor += rs.getInt(1);
-				orderToWaitFor += " ";
-			}
-
-			orderToWaitFor_arr = orderToWaitFor.split(" ");
-
-			/*
-			 * To Do: for each orderToWaitFor_arr[i] : remove(orderToRemove) , decrease
-			 * placeInLine of all watingOrders for orderToWaitFor_arr[i]
-			 */
-
-			for (i = 0; i < orderToWaitFor_arr.length; i++) {
-				/* remove */
-				ps = conn.prepareStatement("DELETE FROM project.waitinglist WHERE orderToWaitFor=? and watingOrder=?");
-				ps.setString(1, orderToWaitFor_arr[i]);
-				ps.setString(2, orderToRemove);
-				ps.executeUpdate();
-
-				/* decrease placeInLine of all watingOrders */
-				ps = conn.prepareStatement("SELECT * FROM project.waitinglist where orderToWaitFor = ?"); // get all
-																											// remain
-																											// watingOrders
-																											// to
-																											// orderToWaitFor
-				stm = conn.createStatement();
-				ps.setString(1, orderToWaitFor_arr[i]);// orderToWaitFor
-				rs = ps.executeQuery();
-				while (rs.next()) {
-					/* get details */
-					int waitingOrder = rs.getInt(2); // waitingOrder
-					int oldPlaceInLine = rs.getInt(3);// placeInLine
-					int newPlace = oldPlaceInLine - 1;
-					/* update placeInLine */
-					ps = conn.prepareStatement(
-							"UPDATE project.waitinglist SET placeInLine=? where orderToWaitFor = ? and waitingOrder = ?");
-					ps.setString(1, String.valueOf(newPlace));// placeInLine
-					ps.setString(2, orderToWaitFor_arr[i]);// orderToWaitFor
-					ps.setString(3, String.valueOf(waitingOrder));
-				}
-			} // for
+			ps.setString(1, orderToRemove);
+			ps.executeUpdate();
 			return true;
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
-
 	}
 
-	public void removeAllwaiters(String orderToRemove_AllWaiters) {
-		Statement stm;
+	public boolean IsOrderInWaitingList(int numOfOrder) {
 		try {
-			PreparedStatement ps = conn.prepareStatement("DELETE FROM project.waitinglist WHERE orderToWaitFor=?");
-			stm = conn.createStatement();
-			ps.setString(1, orderToRemove_AllWaiters);
-			ps.executeUpdate();
 
+			PreparedStatement ps = conn.prepareStatement("SELECT * from project.waitinglist WHERE watingOrder = ?");
+			ps.setString(1, numOfOrder);
+			ResultSet rs = ps.executeQuery();
+			return rs.next(); // return: true if numOfOrder exists in project.waitinglist DB
 		} catch (SQLException e) {
 			e.printStackTrace();
+      return false;
 		}
 	}
-
 	/*
 	 * will check the amount of orders that is in the system
 	 * 
@@ -414,12 +358,26 @@ public class sqlConnector {
 				break;
 			}
 
+
 		} catch (SQLException e) {
 			e.printStackTrace();
+			return false;
 		}
-		i = i / 9;
-		return i++;
 	}
+
+
+	public String check_Confirmation(int orderNum) {
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT confirmed from project.order WHERE orderNum = ?");
+			ps.setString(1, orderNum);
+			ResultSet rs = ps.executeQuery();
+			rs.next();
+			return rs.getString(1);// return confirmed
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+}
 
 	/*
 	 * 
@@ -447,7 +405,6 @@ public class sqlConnector {
 
 		}
 		return counter;
-
 	}
 
 	/*
@@ -460,7 +417,9 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			PreparedStatement ps = conn
+
 					.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE parkName=?");
+
 			ps.setString(1, parkName);
 
 			ResultSet rs = ps.executeQuery();
@@ -478,11 +437,12 @@ public class sqlConnector {
 
 	public int howManyForCurrentTimeAndDate(String[] result) throws ParseException {
 		Statement stm;
-
 		int counter = 0;
 		try {
 			PreparedStatement ps = conn.prepareStatement(
+
 					"SELECT numOfVisitors,orderNum FROM gonaturedb.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? AND status= 'confirmed' OR status='entered' ");
+
 			ps.setString(1, result[2]);
 			ps.setString(3, result[0]);
 			ps.setString(4, result[1]);
@@ -493,13 +453,40 @@ public class sqlConnector {
 				counter += rs.getInt(1);
 				System.out.println(rs.getString(2));
 			}
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 
 		}
 		return counter;
+	}
+	
+	public String getMonthlyIncomes(String date_month, String type) {
+		int cnt;
+		int income = 0;
+		LocalDate date = LocalDate.parse(date_month);
+		LocalDate from = date.withDayOfMonth(1); // start of month date
+		LocalDate to = from.plusMonths(1);//start of next month date
+		try {
+			PreparedStatement ps = conn.prepareStatement("SELECT count(*) ,sum(TotalPrice) FROM project.order WHERE type = ? && (DateOfVisit >= ? &&  DateOfVisit < ?) && status = 'done'");
+			ps.setString(1,type);
+			ps.setString(2,from.toString());
+			ps.setString(3,to.toString());
+			ResultSet rs = ps.executeQuery();
+			rs.next();
+			cnt_Individuals = rs.getInt(1);//count(*)
+			if(cnt > 0) {
+				income = rs.getInt(2);
+			}
+			String res = "" + cnt + " " + income;
+			
+			return res;
 
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+      return null;
+
+		}
 	}
 
 	/*
@@ -811,10 +798,13 @@ public class sqlConnector {
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
 			ps.executeUpdate();
+
 		} catch (SQLException e) {
 			e.printStackTrace();
+			return null;
 		}
 	}
+
 
 	public void enterExitTimeForcasualTraveller(String[] msg) {
 		Statement stm;
@@ -1251,3 +1241,4 @@ public class sqlConnector {
 		}
 	}
 }
+
