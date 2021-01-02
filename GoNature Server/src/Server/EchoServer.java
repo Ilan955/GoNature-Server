@@ -80,7 +80,7 @@ public class EchoServer extends AbstractServer {
 		 * 
 		 */
 		String[] bar_String;
-
+		String sendMe;
 		String done = "Done";
 		int flag = 0;
 		String st = (String) msg;
@@ -93,6 +93,143 @@ public class EchoServer extends AbstractServer {
 		try {
 			boolean res;
 			switch (action) {
+
+
+			case "submitVisitor":
+				user = sq.CheckForId(result[0]);
+
+				sb = new StringBuffer();
+				for (int i = 0; i < user.length; i++) {
+					sb.append(user[i]);
+					sb.append(" ");
+				}
+
+				sb = new StringBuffer();
+				for (int i = 0; i < user.length; i++) {
+					sb.append(user[i]);
+					sb.append(" ");
+				}
+
+				String str = sb.toString();
+				client.sendToClient(str);
+
+				break;
+
+			case "updateVisitor":
+				if (sq.updateEmail(result)) {
+					user = sq.CheckForId(result[0]);
+
+					sb = new StringBuffer();
+					for (int i = 0; i < user.length; i++) {
+						sb.append(user[i]);
+						sb.append(" ");
+					}
+					String str2 = sb.toString();
+					client.sendToClient(str2);
+				}
+				break;
+
+			case "connectivity":
+
+				sb = new StringBuffer();
+				sb.append(getPort());
+				sb.append(" ");
+				sb.append(client);
+				String s = sb.toString();
+
+				client.sendToClient(s);
+
+			case "isMemberExists":
+				res = sq.isMemberExists(result);
+				StringBuffer sb3 = new StringBuffer();
+				sb3.append("SignUpController");
+				sb3.append(" ");
+				sb3.append("isMemberExists");
+				sb3.append(" ");
+				sb3.append(res);
+				client.sendToClient(sb3.toString());
+				break;
+
+			case "addMember":
+				sb3 = new StringBuffer();
+				sb3.append("SignUpController");
+				sb3.append(" ");
+				sb3.append("addMember");
+				sb3.append(" ");
+				sb3.append(sq.addMember(result));
+				client.sendToClient(sb3.toString());
+				break;
+			case "deleteFromDbWhenlogOutTraveller":
+				sq.deleteFromDbWhenTravellerLogOut(result[0], result[1]);
+				client.sendToClient("UserController UpdateFieldofLoggedInTraveller");
+			case "getEmployeeDetails":
+				if (sq.canGetEmployee(result[0])) {
+					bar_String = new String[12];
+					StringBuffer checkString = new StringBuffer();
+					checkString.append(result[0]);
+					checkString.append(" ");
+					checkString.append(result[1]);
+					// System.out.println("I am getEmployeeDetails: " + checkString.toString());
+					bar_String = sq.getEmployeeUN(checkString.toString());
+					sb = new StringBuffer();
+					for (int i = 0; i < bar_String.length; i++) {
+						sb.append(bar_String[i]);
+						sb.append(" ");
+					}
+					String s2 = sb.toString();
+					client.sendToClient(s2);
+				}
+				break;
+			case "logOutEmployee":
+				if (sq.logOutEmployee(result[0]))
+					client.sendToClient("LoggedOfSuccess");
+			case "getTravellerDetails":
+				if (sq.canGetTraveller(result[0])) {
+					// System.out.print(result[0]);
+					bar_String = new String[12];
+					bar_String = sq.getTravellerFromDB(result[0]);
+					sb = new StringBuffer();
+					for (int i = 0; i < bar_String.length; i++) {
+						sb.append(bar_String[i]);
+						sb.append(" ");
+					}
+					sendMe = sb.toString();
+					// System.out.print(sb4.toString());
+					client.sendToClient(sendMe);
+				}
+				break;
+
+			case "updateParkChangeRequestStatus": // xxxxxxxxxxx
+				if (sq.updateParkChangeRequestStatus(result[0])) {
+					client.sendToClient("ChangeIsSababa ");
+				}
+				break;
+			case "updateParkChangesWhenPressedApprove":
+				if (sq.updateParkChangesInParkTable(result[0], result[1], result[2], result[3])) {
+					client.sendToClient("parkSettingsAreUpdated ");
+				}
+			case "getParkSettingsRequestsFromDB":// #TRY$%YTRGFG%^Y%^#H
+				String send = sq.getParkSettingsRequests();
+				client.sendToClient(send);
+				break;
+			case "SendParkChangesToDepartmentManager":
+				bar_String = new String[3];
+				bar_String[0] = "RequestsController";
+				bar_String[1] = "parkSettingsChangesSent";
+				bar_String[2] = sq.sendParkSettingsRequestToDepManager(result);
+				sb = new StringBuffer();
+				for (int i = 0; i < bar_String.length; i++) {
+					sb.append(bar_String[i]);
+					sb.append(" ");
+				}
+				sendMe = sb.toString();
+				client.sendToClient(sendMe);
+				break;
+
+			case "exit":
+				serverStopped();
+				break;
+
 
 			case "setManagerDiscount":
 				boolean bool = sq.updateManagerDiscount(result[0], result[1], result[2], result[3]);
@@ -130,28 +267,188 @@ public class EchoServer extends AbstractServer {
 				sb.append(addToWaitingList_flag);
 				client.sendToClient(sb.toString());
 				break;
+
 				
 			case"makeMonthlyIncomeReport":
-				sb = new StringBuffer();
-				sb.append("ReportsController");// the name of the controller
-				sb.append(" ");
-				sb.append("makeMonthlyIncomeReport");// The name of the method
-				sb.append(" ");
-				sb.append(sq.getMonthlyIncomes(result[0],"Traveler"));//result[0] = Date 
-				sb.append(" ");
-				sb.append(sq.getMonthlyIncomes(result[0],"Member"));//result[0] = Date 
+      sb = new StringBuffer();
+          sb.append(sq.getMonthlyIncomes(result[0],"Traveler"));//result[0] = Date 
+          sb.append(" ");
+          sb.append("makeMonthlyIncomeReport");// The name of the method
+          sb.append(" ");
+          sb.append(sq.getMonthlyIncomes(result[0],"Member"));//result[0] = Date 
 				sb.append(" ");
 				sb.append(sq.getMonthlyIncomes(result[0],"Family"));//result[0] = Date 
 				sb.append(" ");
-				sb.append(sq.getMonthlyIncomes(result[0],"groupGuide"));//result[0] = Date 
+          sb.append(sq.getMonthlyIncomes(result[0],"groupGuide"));//result[0] = Date 
 				client.sendToClient(sb.toString());
 				break;
-			
+				
+			/*
+			 * This case will check first what number the order id will be Will insert into
+			 * the Order table the new order got from client
+			 */
+			case "confirmOrder":
+				int orderNum = sq.nextOrder();
+				sq.addOrder(orderNum, result);
+				client.sendToClient(done);
+				break;
+			/*
+			 * This method will search for the order and delete it
+			 */
+			case "cancelOrder":
+				sq.changeStatusOfOrder(result, "cancelled");
+				client.sendToClient(done);
+				break;
+
+			case "getDataForReport":
+				int cancelledOrderNumber = sq.checkHowManyCancelled(result, "canceled");
+				int notEnteredOrderNumber = sq.checkHowManyCancelled(result, "confirmed");
+
+				sb = new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("getDataForReport");
+				sb.append(" ");
+				sb.append(Integer.toString(cancelledOrderNumber));
+				sb.append(" ");
+				sb.append(Integer.toString(notEnteredOrderNumber));
+				client.sendToClient(sb.toString());
+				break;
+
+			case "getExsistingOrders":
+				String res1 = sq.getOrders(result[0]);
+
+				sb = new StringBuffer();
+				sb.append("ReportsController");// the name of the controller
+				sb.append(" ");
+				
+
+				sb.append(res1);
+				client.sendToClient(sb.toString());
+				break;
+			case "ChangeToWaitOrder":
+				sq.changeStatusOfOrder(result, "waiting");
+				client.sendToClient(done);
+				break;
+			case "DetailsPark":
+
+				int currentVisitors = sq.howManyCurrentvisitorsForOrdersInPark(result[0]);
+				int unexpectedVisitors = sq.howManyUnexpectedVisitorsInPark(result[0]);
+				int maxAvailableVisitors = sq.howManyAllowedInPark(result[0]);
+				int maxVisitors = sq.howManyMaxvisitorsAllowedInPark(result[0]);
+				float maxDuration = sq.howmanyTimeEveryVisitorInPark(result[0]);
+				sb = new StringBuffer();
+				sb.append("ParkController");
+				sb.append(" ");
+				sb.append("DetailsPark");
+				sb.append(" ");
+				sb.append(Integer.toString(currentVisitors));
+				sb.append(" ");
+				sb.append(Integer.toString(maxVisitors));
+				sb.append(" ");
+				sb.append(Float.toString(maxDuration));
+				client.sendToClient(sb.toString());
+				break;
+			case "setNumOfVisitorEntringPark":
+				sq.updateUnexpectedVisitors(result);
+				client.sendToClient(done);
+				break;
+
+			case "setCurrentVisitros":
+				sq.updateCurrentVisitors(result);
+				client.sendToClient(done);
+				break;
+
+			case "enterWithoutOrder":
+				sq.insertTravellerInPark(result);
+				client.sendToClient(done);
+				break;
+			case "updateExitTimeForTravellerWithOrder":
+				sq.enterExitTimeForTravellerWithOrder(result);
+				client.sendToClient(done);
+				break;
+			case "updateExitTimeForcasualTraveller":
+				sq.enterExitTimeForcasualTraveller(result);
+				client.sendToClient(done);
+				break;
+			////// Reports start/////
+			case "getData":
+				String ans = sq.getVisitorsDataReport(result);
+				sb = new StringBuffer();
+				sb.append("ReportsController");
+				sb.append(" ");
+				sb.append("getData");
+				sb.append(" ");
+				sb.append(ans);
+				client.sendToClient(sb.toString());
+				break;
+			////// Reports end/////
+			case "insertRequestToDB":
+				sq.insertRequest(result);
+				client.sendToClient(done);
+				break;
+			case "checkIfApproveRequest":
+				int status = sq.IsApproveEnterParkForTraveller(result);
+				StringBuffer sb5 = new StringBuffer();
+				sb5.append("RequestsController");
+				sb5.append(" ");
+				sb5.append("checkIfApproveRequest");
+				sb5.append(" ");
+				sb5.append(Integer.toString(status));
+				client.sendToClient(sb5.toString());
+				break;
+			case "getRequestsTravellerOfEnterPark":
+				String string = sq.getRequestTableOfEnterPark(result[0]);
+				sb = new StringBuffer();
+				sb.append("RequestsController");
+				sb.append(" ");
+				sb.append("getRequestsTravellerOfEnterPark");
+				sb.append(" ");
+				sb.append(string);
+				client.sendToClient(sb.toString());
+				break;
+
+			case "changeStatusForCasualTraveller":
+				sq.changeRequestStatusForCasualTraveller(result);
+				client.sendToClient(done);
+				break;
+
+			case "enterDateofFullCapcityPark":
+				sq.insertfullcapacityPark(result);
+				client.sendToClient(done);
+				break;
+			case "checkIfThisDateInFullCapacityTable":
+				sq.isDateInfullcapacityExists(result);
+				sb = new StringBuffer();
+				sb.append("ParkController");
+				sb.append(" ");
+				sb.append("checkIfThisDateInFullCapacityTable");
+				sb.append(" ");
+				sb.append(result);
+				client.sendToClient(sb.toString());
+				break;
+			case "updateStatusForCapacityParkToFull":
+				sq.changeStatusForCapacityParkToFull(result);
+				client.sendToClient(done);
+				break;
+			case "getTableOfUnFullCapacityInDates":
+				String st1 = sq.getUnFullCapacityTableInDates(result);
+				sb = new StringBuffer();
+				sb.append("ReportsController");
+				sb.append(" ");
+				sb.append("getTableOfUnFullCapacityInDates");
+				sb.append(" ");
+				sb.append(st1);
+				client.sendToClient(sb.toString());
+				break;
+			case "setEnterOrder":
+				sq.changeStatusOfOrder(result, "Entered");
+				client.sendToClient(done);
+				break;
+
 			default:
 				System.out.println("Sorry, don't know what you presse Now");
-				
-						
-						
+					
 			}
 		} catch (Exception e) {
 			System.out.println("Error");
