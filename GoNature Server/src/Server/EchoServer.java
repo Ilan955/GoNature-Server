@@ -414,6 +414,49 @@ public class EchoServer extends AbstractServer {
 				sq.insertTravellerInPark(result);
 				client.sendToClient(done);
 				break;
+			case "checkIfTravellerExistsInPark":
+				boolean answer=sq.isTravellerExistsInPark(result);
+				StringBuffer sb7 = new StringBuffer();
+				sb7.append("EntranceParkController");
+				sb7.append(" ");
+				sb7.append("checkIfTravellerExistsInPark");
+				sb7.append(" ");
+				sb7.append(answer);
+				client.sendToClient(sb7.toString());
+				break;
+					
+			case "getTravellerInParkDetails":
+				String res2 = sq.getTravellerInParkDetails(result[0]);
+				sb = new StringBuffer();
+				sb.append("EntranceParkController");
+				sb.append(" ");
+				sb.append("getTravellerInParkDetails");
+				sb.append(" ");
+				sb.append(res2);
+				client.sendToClient(sb.toString());
+				break;	
+				
+			case "checkIfOrderExistsInParkAndConfirmed":
+				boolean answer3=sq.isOrderExistsInPark(result);
+				StringBuffer sb8 = new StringBuffer();
+				sb8.append("EntranceParkController");
+				sb8.append(" ");
+				sb8.append("checkIfOrderExistsInParkAndConfirmed");
+				sb8.append(" ");
+				sb8.append(answer3);
+				client.sendToClient(sb8.toString());
+				break;
+				
+			case "getOrderDetailsForExitPark":
+				String res3 = sq.getOrderDetailsForExitPark(result[0]);
+				sb = new StringBuffer();
+				sb.append("EntranceParkController");
+				sb.append(" ");
+				sb.append("getOrderDetailsForExitPark");
+				sb.append(" ");
+				sb.append(res3);
+				client.sendToClient(sb.toString());
+				break;	
 			case "updateExitTimeForTravellerWithOrder":
 				sq.enterExitTimeForTravellerWithOrder(result);
 				client.sendToClient(done);
@@ -469,14 +512,14 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(done);
 				break;
 			case "checkIfThisDateInFullCapacityTable":
-				sq.isDateInfullcapacityExists(result);
-				sb = new StringBuffer();
-				sb.append("ParkController");
-				sb.append(" ");
-				sb.append("checkIfThisDateInFullCapacityTable");
-				sb.append(" ");
-				sb.append(result);
-				client.sendToClient(sb.toString());
+				boolean answer1=sq.isDateInfullcapacityExists(result);
+				StringBuffer sb6 = new StringBuffer();
+				sb6.append("ParkConroller");
+				sb6.append(" ");
+				sb6.append("checkIfThisDateInFullCapacityTable");
+				sb6.append(" ");
+				sb6.append(answer1);
+				client.sendToClient(sb6.toString());
 				break;
 			case "updateStatusForCapacityParkToFull":
 				sq.changeStatusForCapacityParkToFull(result);
