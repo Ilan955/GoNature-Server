@@ -3,14 +3,16 @@
 // license found at www.lloseng.com 
 package Server;
 
-import java.io.*;
-import SqlConnector.*;
-import src.ocsf.server.AbstractServer;
-import src.ocsf.server.ConnectionToClient;
-
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+import SqlConnector.sqlConnector;
+import src.ocsf.server.AbstractServer;
+import src.ocsf.server.ConnectionToClient;
 
 /**
  * This class overrides some of the methods in the abstract superclass in order
@@ -26,7 +28,9 @@ import java.sql.SQLException;
 public class EchoServer extends AbstractServer {
 	final public static int DEFAULT_PORT = 5555;
 	private Connection conn;
-	sqlConnector sq;
+	static sqlConnector sq;
+	public WaitingListController_server server_waitingListController;
+
 
 	// Constructors ****************************************************
 
@@ -61,7 +65,7 @@ public class EchoServer extends AbstractServer {
 		 * 
 		 */
 		String[] bar_String;
-
+		String sendMe;
 		String done = "Done";
 		int flag = 0;
 		String st = (String) msg;
@@ -74,6 +78,7 @@ public class EchoServer extends AbstractServer {
 		try {
 			boolean res;
 			switch (action) {
+
 
 			case "submitVisitor":
 				user = sq.CheckForId(result[0]);
@@ -108,7 +113,27 @@ public class EchoServer extends AbstractServer {
 					client.sendToClient(str2);
 				}
 				break;
-
+				/*
+				 * This method will check if the visitor have tomorow an order.
+				 * if so, will check if already informed, if not informed, will create a new thread.
+				 * this thread will run for 2 hourse and will check if the status of the order changed. 
+				 * 2 fields: Informed, Confirmed, both false at the start. 
+				 */
+			case "havingAlert":
+				String orderNumber = sq.checkIfHavingTomorrow(result);
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("havingAlert");
+				sb.append(" ");
+				if(!(orderNumber.equals("")))
+				{
+					
+				}
+				sb.append(orderNumber);
+				client.sendToClient(sb.toString());
+				break; 
+				
 			case "connectivity":
 
 				sb = new StringBuffer();
@@ -131,7 +156,6 @@ public class EchoServer extends AbstractServer {
 				break;
 
 			case "addMember":
-
 				sb3 = new StringBuffer();
 				sb3.append("SignUpController");
 				sb3.append(" ");
@@ -140,7 +164,9 @@ public class EchoServer extends AbstractServer {
 				sb3.append(sq.addMember(result));
 				client.sendToClient(sb3.toString());
 				break;
-
+			case "deleteFromDbWhenlogOutTraveller":
+				sq.deleteFromDbWhenTravellerLogOut(result[0], result[1]);
+				client.sendToClient("UserController UpdateFieldofLoggedInTraveller");
 			case "getEmployeeDetails":
 				if (sq.canGetEmployee(result[0])) {
 					bar_String = new String[12];
@@ -159,132 +185,109 @@ public class EchoServer extends AbstractServer {
 					client.sendToClient(s2);
 				}
 				break;
+			case "logOutEmployee":
+				if (sq.logOutEmployee(result[0]))
+					client.sendToClient("LoggedOfSuccess");
 			case "getTravellerDetails":
-
 				if (sq.canGetTraveller(result[0])) {
 					// System.out.print(result[0]);
-					bar_String = new String[11];
-
+					bar_String = new String[12];
 					bar_String = sq.getTravellerFromDB(result[0]);
 					sb = new StringBuffer();
 					for (int i = 0; i < bar_String.length; i++) {
 						sb.append(bar_String[i]);
 						sb.append(" ");
 					}
-					String sendMe = sb.toString();
+					sendMe = sb.toString();
 					// System.out.print(sb4.toString());
 					client.sendToClient(sendMe);
 				}
+				break;
 
+			case "updateParkChangeRequestStatus": // xxxxxxxxxxx
+				if (sq.updateParkChangeRequestStatus(result[0])) {
+					client.sendToClient("ChangeIsSababa ");
+				}
+				break;
+			case "updateParkChangesWhenPressedApprove":
+				if (sq.updateParkChangesInParkTable(result[0], result[1], result[2], result[3])) {
+					client.sendToClient("parkSettingsAreUpdated ");
+				}
+			case "getParkSettingsRequestsFromDB":// #TRY$%YTRGFG%^Y%^#H
+				String send = sq.getParkSettingsRequests();
+				client.sendToClient(send);
+				break;
+			case "SendParkChangesToDepartmentManager":
+				bar_String = new String[3];
+				bar_String[0] = "RequestsController";
+				bar_String[1] = "parkSettingsChangesSent";
+				bar_String[2] = sq.sendParkSettingsRequestToDepManager(result);
+				sb = new StringBuffer();
+				for (int i = 0; i < bar_String.length; i++) {
+					sb.append(bar_String[i]);
+					sb.append(" ");
+				}
+				sendMe = sb.toString();
+				client.sendToClient(sendMe);
 				break;
 
 			case "exit":
 				serverStopped();
 				break;
 
+
 			case "setManagerDiscount":
-				boolean bool = sq.addManagerDiscount(result); // returns boolean <<<<<<<<<<<<<<<<<<<<<<<<
+				boolean bool = sq.updateManagerDiscount(result[0], result[1], result[2], result[3]);
 				sb = new StringBuffer();
 				sb.append("DiscountController"); // The name of the controller
 				sb.append(" ");
 				sb.append("setManagerDiscount");// The name of the method
 				sb.append(" ");
 				sb.append(bool);
-				client.sendToClient(sb.toString()); // send the name of the controller called this method
+				client.sendToClient(sb.toString());
 
 				break;
 
 			case "ValidDiscount":
 				// result = [parkName, dateOfVisit]
-				String discount = sq.getManagerDiscount(result);
+				String discount = sq.getManagerDiscount(result[0], result[1]);
 				sb = new StringBuffer();
 				sb.append("DiscountController"); // The name of the controller
 				sb.append(" ");
 				sb.append("ValidDiscount");// The name of the method
 				sb.append(" ");
-				sb.append(discount); // The discount row
-				sb.append(" ");
-				sb.append(result[1]);// dateOfVisit
+				sb.append(discount); // The discount precentage
+
 				client.sendToClient(sb.toString());
 				break;
 
 			case "enterWaitingList":
-				// result = [parkName[0],dateOfVisit[1],hour[2],numOfVistors[3],orderNum[4]]
-				String orderNums = sq.findOrderToWaitFor(result);
-				sb = new StringBuffer();
-				sb.append(result[4]);// orderNum to enter the DB
-				sb.append(" ");
-				sb.append(orderNums);
-				boolean addToWaitingList_flag = sq.addToWaitingList(sb.toString());
-
+				// result = [orderNum]
+				boolean addToWaitingList_flag = sq.addToWaitingList(result[0]); // orderNum
 				sb = new StringBuffer();
 				sb.append("WaitingListController");// the name of the controller
 				sb.append(" ");
 				sb.append("enterWaitingList");// The name of the method
 				sb.append(" ");
 				sb.append(addToWaitingList_flag);
-
 				client.sendToClient(sb.toString());
 				break;
 
-			case "sendMessageFirstWaitingList":
-				// result = [canceldOrderNum[0]]
-				String orderNum_firstInLine = sq.findOrderFirstInLine(result[0]);// canceldOrderNum
-				sb = new StringBuffer();
-				sb.append("WaitingListController");// the name of the controller
+				
+			case"makeMonthlyIncomeReport":
+      sb = new StringBuffer();
+          sb.append(sq.getMonthlyIncomes(result[0],"Traveler"));//result[0] = Date 
+          sb.append(" ");
+          sb.append("makeMonthlyIncomeReport");// The name of the method
+          sb.append(" ");
+          sb.append(sq.getMonthlyIncomes(result[0],"Member"));//result[0] = Date 
 				sb.append(" ");
-				sb.append("sendMessageFirstWaitingList");// The name of the method
+				sb.append(sq.getMonthlyIncomes(result[0],"Family"));//result[0] = Date 
 				sb.append(" ");
-				sb.append(orderNum_firstInLine);
-
+          sb.append(sq.getMonthlyIncomes(result[0],"groupGuide"));//result[0] = Date 
 				client.sendToClient(sb.toString());
 				break;
-
-			case "removeFromWaitingList":
-				boolean bool2 = sq.removeFromWaitingList(result[0]);// Num Of orderToRemove
-				sb = new StringBuffer();
-				sb.append("WaitingListController");// the name of the controller
-				sb.append(" ");
-				sb.append("removeFromWaitingList");// The name of the method
-				sb.append(" ");
-				sb.append(bool2);
-
-				client.sendToClient(sb.toString());
-				break;
-
-			case "removeAllwaiters":
-				sq.removeAllwaiters(result[0]);// Num Of orderToRemove_AllWaiters
-				sb = new StringBuffer();
-				sb.append("WaitingListController");// the name of the controller
-				sb.append(" ");
-				sb.append("removeAllwaiters");// The name of the method
-
-				client.sendToClient(sb.toString());
-				break;
-
-			/*
-			 * will check with the order table all the orders in the current date and time
-			 * return the number of visitors in all this orders will compare the total
-			 * number of visitors in park (from this orders) with the number of visitors can
-			 * enter to the wanted park, if the sum of the desired visitors with the current
-			 * visitors from the order greater then visitors can enter park will return
-			 * false to the order controller AvailableVisitors= How many allowed every X
-			 * hours in the park currentVisitorsAtBoundry=How many visitors already will be
-			 * in park in the gapTime
-			 */
-			case "canMakeOrder":
-				int currentVisitorsAtBoundry = sq.howManyForCurrentTimeAndDate(result);
-				int availableVisitors = sq.howManyAllowedInPark(result[2]);
-				sb = new StringBuffer();
-				sb.append("OrderController");
-				sb.append(" ");
-				sb.append("canMakeOrder");
-				sb.append(" ");
-				sb.append(Integer.toString(currentVisitorsAtBoundry));
-				sb.append(" ");
-				sb.append(Integer.toString(availableVisitors));
-				client.sendToClient(sb.toString());
-				break;
+				
 			/*
 			 * This case will check first what number the order id will be Will insert into
 			 * the Order table the new order got from client
@@ -298,10 +301,28 @@ public class EchoServer extends AbstractServer {
 			 * This method will search for the order and delete it
 			 */
 			case "cancelOrder":
-				sq.changeStatusOfOrder(result, "cancelled");
+				sq.changeStatusOfOrder(result, "cancelled","Manually");
+				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!here WaitingLine!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 				client.sendToClient(done);
 				break;
 
+				//get the prices for the type of group
+			case "getTotalPrice":
+				String  resofDis = sq.getTotalPayload(result[0]);
+				sb= new StringBuffer();
+				sb.append("DiscountController");
+				sb.append(" ");
+				sb.append("getTotalPrice");
+				sb.append(" ");
+				sb.append(result[1]);
+				sb.append(" ");
+				sb.append(result[2]);
+				sb.append(" ");
+				sb.append(resofDis);
+				client.sendToClient(sb.toString());
+				break;
+				
+				
 			case "getDataForReport":
 				int cancelledOrderNumber = sq.checkHowManyCancelled(result, "canceled");
 				int notEnteredOrderNumber = sq.checkHowManyCancelled(result, "confirmed");
@@ -319,16 +340,17 @@ public class EchoServer extends AbstractServer {
 
 			case "getExsistingOrders":
 				String res1 = sq.getOrders(result[0]);
+
 				sb = new StringBuffer();
-				sb.append("OrderController");
+				sb.append("ReportsController");// the name of the controller
 				sb.append(" ");
-				sb.append("getExsistingOrders");
-				sb.append(" ");
+				
+
 				sb.append(res1);
 				client.sendToClient(sb.toString());
 				break;
 			case "ChangeToWaitOrder":
-				sq.changeStatusOfOrder(result, "waiting");
+				sq.changeStatusOfOrder(result, "waiting","Manually");
 				client.sendToClient(done);
 				break;
 			case "DetailsPark":
@@ -344,10 +366,6 @@ public class EchoServer extends AbstractServer {
 				sb.append("DetailsPark");
 				sb.append(" ");
 				sb.append(Integer.toString(currentVisitors));
-				sb.append(" ");
-				sb.append(Integer.toString(unexpectedVisitors));
-				sb.append(" ");
-				sb.append(Integer.toString(maxAvailableVisitors));
 				sb.append(" ");
 				sb.append(Integer.toString(maxVisitors));
 				sb.append(" ");
@@ -368,6 +386,49 @@ public class EchoServer extends AbstractServer {
 				sq.insertTravellerInPark(result);
 				client.sendToClient(done);
 				break;
+			case "checkIfTravellerExistsInPark":
+				boolean answer=sq.isTravellerExistsInPark(result);
+				StringBuffer sb7 = new StringBuffer();
+				sb7.append("EntranceParkController");
+				sb7.append(" ");
+				sb7.append("checkIfTravellerExistsInPark");
+				sb7.append(" ");
+				sb7.append(answer);
+				client.sendToClient(sb7.toString());
+				break;
+					
+			case "getTravellerInParkDetails":
+				String res2 = sq.getTravellerInParkDetails(result[0]);
+				sb = new StringBuffer();
+				sb.append("EntranceParkController");
+				sb.append(" ");
+				sb.append("getTravellerInParkDetails");
+				sb.append(" ");
+				sb.append(res2);
+				client.sendToClient(sb.toString());
+				break;	
+				
+			case "checkIfOrderExistsInParkAndConfirmed":
+				boolean answer3=sq.isOrderExistsInPark(result);
+				StringBuffer sb8 = new StringBuffer();
+				sb8.append("EntranceParkController");
+				sb8.append(" ");
+				sb8.append("checkIfOrderExistsInParkAndConfirmed");
+				sb8.append(" ");
+				sb8.append(answer3);
+				client.sendToClient(sb8.toString());
+				break;
+				
+			case "getOrderDetailsForExitPark":
+				String res3 = sq.getOrderDetailsForExitPark(result[0]);
+				sb = new StringBuffer();
+				sb.append("EntranceParkController");
+				sb.append(" ");
+				sb.append("getOrderDetailsForExitPark");
+				sb.append(" ");
+				sb.append(res3);
+				client.sendToClient(sb.toString());
+				break;	
 			case "updateExitTimeForTravellerWithOrder":
 				sq.enterExitTimeForTravellerWithOrder(result);
 				client.sendToClient(done);
@@ -383,16 +444,6 @@ public class EchoServer extends AbstractServer {
 				sb.append("ReportsController");
 				sb.append(" ");
 				sb.append("getData");
-				sb.append(" ");
-				sb.append(ans);
-				client.sendToClient(sb.toString());
-				break;
-			case "getDataEntranceTimesAndStay":
-				ans = sq.getEntranceAndStay(result);
-				sb = new StringBuffer();
-				sb.append("ReportsController");
-				sb.append(" ");
-				sb.append("getDataEntranceTimesAndStay");
 				sb.append(" ");
 				sb.append(ans);
 				client.sendToClient(sb.toString());
@@ -433,15 +484,20 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(done);
 				break;
 			case "checkIfThisDateInFullCapacityTable":
-				sq.isDateInfullcapacityExists(result);
-				sb = new StringBuffer();
-				sb.append("ParkController");
-				sb.append(" ");
-				sb.append("checkIfThisDateInFullCapacityTable");
-				sb.append(" ");
-				sb.append(result);
-				client.sendToClient(sb.toString());
+				boolean answer1=sq.isDateInfullcapacityExists(result);
+				StringBuffer sb6 = new StringBuffer();
+				sb6.append("ParkConroller");
+				sb6.append(" ");
+				sb6.append("checkIfThisDateInFullCapacityTable");
+				sb6.append(" ");
+				sb6.append(answer1);
+				client.sendToClient(sb6.toString());
 				break;
+			case "confirmAlert":
+				sq.conAlert(result[0]);
+				client.sendToClient(done);
+				break;
+				
 			case "updateStatusForCapacityParkToFull":
 				sq.changeStatusForCapacityParkToFull(result);
 				client.sendToClient(done);
@@ -457,18 +513,18 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(sb.toString());
 				break;
 			case "setEnterOrder":
-				sq.changeStatusOfOrder(result, "Entered");
+				sq.changeStatusOfOrder(result, "Entered","EnteredPark");
 				client.sendToClient(done);
 				break;
+
 			default:
 				System.out.println("Sorry, don't know what you presse Now");
-
+					
 			}
 		} catch (Exception e) {
 			System.out.println("Error");
 
 		}
-
 	}
 
 	/*
@@ -492,13 +548,89 @@ public class EchoServer extends AbstractServer {
 		String[] result = msg.split(" ");
 		return result[0];
 	}
+	/*
+	 * This thread will check 24/7 the next condition:
+	 * 	every hour do:
+	 * 	1. take current hour
+	 * 	2. x= minus 2 hours from that
+	 * 	3. take tomorrow day
+	 * 	4. get all the orderes for tomorrow who are :
+	 * 			a. time of x
+	 * 			b. Confirmed = 'f'
+	 * 	5. save all this orders in a string
+	 * 	6. iterate over this string, change status to cancelled
+	 * 	7. get next in line in the waiting list.
+	 */
+	
+	public static class UtilityThread extends Thread{
+		
+		public void run() {
+			LocalTime timeNow;
+			
+			 int min,hour;
+			 String stringForComplete="",dat,stringForHalf="";
+			while(true) {
+				timeNow = LocalTime.now();
+				hour = timeNow.getHour();
+				min =timeNow.getMinute();
+				if(hour<10||hour>20) {
+					try {
+						Thread.sleep(1000 * 60 * 60);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}		
+				else {
+					 if(min==0) {
+						 dat = LocalDate.now().plusDays(1).toString();
+						 hour-=2;
+						 timeNow = LocalTime.parse(Integer.toString(hour)+":"+"00");
+						 stringForComplete= sq.checkIfConfirmAlert(dat,timeNow.toString()); 
+						 try {
+								Thread.sleep(1000 * 60 * 60);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						 
+					 }
+					 if(min==30) {
+						 dat = LocalDate.now().plusDays(1).toString();
+						 hour-=2;
+						 timeNow = LocalTime.parse(Integer.toString(hour)+":"+"30");
+						 
+						 stringForHalf=sq.checkIfConfirmAlert(dat,timeNow.toString());
+						 try {
+								Thread.sleep(1000 * 60 * 60);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+					 }	 
+					
+					 String[] complete =stringForComplete.split(" ");
+					 String[] halfs= stringForHalf.split(" ");
+					 if(!(complete.length==0)) {
+						 for(int i = 0;i<complete.length;i++)
+							 sq.cancelOrderForWaiting(complete[i]);	
+						 	
+					 }
+					 if(!(halfs.length==0)) {
+						 for(int i = 0;i<halfs.length;i++)
+							 sq.cancelOrderForWaiting(halfs[i]);
+						
+					 }
+				}	
+			}
+				
+				    
+		  }  
+	}
 
 	/**
 	 * This method overrides the one in the superclass. Called when the server
 	 * starts listening for connections.
 	 */
 	protected void serverStarted() {
-
+		
 		System.out.println("Server listening for connections on port " + getPort());
 
 		try {
@@ -510,11 +642,13 @@ public class EchoServer extends AbstractServer {
 		}
 
 		try {
-
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
-
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root","");
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
+			UtilityThread ut= new UtilityThread();
+			ut.start();
+			server_waitingListController = new WaitingListController_server(sq);
+
 
 		} catch (SQLException ex) {/* handle any errors */
 			System.out.println("SQLException: " + ex.getMessage());
