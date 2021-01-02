@@ -347,7 +347,7 @@ public class sqlConnector {
 		int i = 0;
 		try {
 			PreparedStatement ps = conn
-					.prepareStatement("SELECT orderNum FROM gonaturedb.order ORDER BY orderNum DESC ");
+					.prepareStatement("SELECT orderNum FROM project.order ORDER BY orderNum DESC ");
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 			if (rs.isLast())
@@ -363,6 +363,9 @@ public class sqlConnector {
 			e.printStackTrace();
 			return false;
 		}
+		
+		return ++i;
+
 	}
 
 
@@ -441,7 +444,7 @@ public class sqlConnector {
 		try {
 			PreparedStatement ps = conn.prepareStatement(
 
-					"SELECT numOfVisitors,orderNum FROM gonaturedb.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? AND status= 'confirmed' OR status='entered' ");
+					"SELECT numOfVisitors,orderNum FROM project.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? AND status= 'confirmed' OR status='entered' ");
 
 			ps.setString(1, result[2]);
 			ps.setString(3, result[0]);
@@ -502,7 +505,7 @@ public class sqlConnector {
 
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"INSERT INTO gonaturedb.order (orderNum, TimeInPark, DateOfVisit, wantedPark, TotalPrice, ID,type,numOfVisitors) VALUES (?,?,?,?,?,?,?,?)");
+					"INSERT INTO project.order (orderNum, TimeInPark, DateOfVisit, wantedPark, TotalPrice, ID,type,numOfVisitors) VALUES (?,?,?,?,?,?,?,?)");
 			ps.setInt(1, orderNum);
 			ps.setString(2, result[0]);
 			ps.setDate(3, wanted);
@@ -575,17 +578,20 @@ public class sqlConnector {
 		return s;
 	}
 
-	public void changeStatusOfOrder(String[] result, String status) {
+
+	public void changeStatusOfOrder(String[] result,String status,String comment) {
 		Statement stm;
 
 		try {
-			PreparedStatement ps = conn.prepareStatement(
-					"UPDATE gonaturedb.order SET status=? WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+			PreparedStatement ps = conn.prepareStatement("UPDATE project.order SET status=? ,comment=? WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+
+	
 			ps.setString(1, status);
-			ps.setString(2, result[0]);
-			ps.setString(3, result[1]);
-			ps.setString(4, result[2]);
-			ps.setString(5, result[3]);
+			ps.setString(2, comment);
+			ps.setString(3, result[0]);
+			ps.setString(4, result[1]);
+			ps.setString(5, result[2]);
+			ps.setString(6, result[3]);
 			ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -598,11 +604,11 @@ public class sqlConnector {
 		StringBuffer s = new StringBuffer();
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice FROM gonaturedb.order WHERE ID=?");
+					"SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice,status,comment FROM project.order WHERE ID=? AND status='waitForConfirm' OR status='confirmed'");
 			ps.setString(1, iD);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				for (int i = 1; i <= 6; i++) {
+				for (int i = 1; i <= 8; i++) {
 					s.append(rs.getString(i));
 					s.append(" ");
 				}
@@ -1196,11 +1202,13 @@ public class sqlConnector {
 
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT * from gonaturedb.order WHERE status = ? AND DateOfVisit BETWEEN ? AND ?");
 
-			ps.setString(1, status);
-			ps.setString(2, result[0]);
-			ps.setString(3, result[1]);
+					"SELECT * from project.order WHERE status = ? AND DateOfVisit BETWEEN ? AND ?");
+	
+			ps.setString(1, status); 
+			ps.setString(2, result[0]); 
+			ps.setString(3, result[1]); 
+			
 
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -1214,6 +1222,121 @@ public class sqlConnector {
 		return counter;
 	}
 
+
+	//this method will go into the db and check what the discount and the price need to be given for the current visitor
+	public String getTotalPayload(String typeOfService) {
+		StringBuffer sb = new StringBuffer();
+		
+		Statement stm;
+		int counter=0;
+	
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT departmentPrice,valueOfDiscount,Members from project.discounts WHERE typeOfService = ?");
+
+			ps.setString(1, typeOfService); 
+			
+			
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				sb.append(rs.getString(1));
+				sb.append(" ");
+				sb.append(rs.getString(2));
+				sb.append(" ");
+				sb.append(rs.getString(3));
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+
+		}
+		return sb.toString();
+		
+	}
+/*
+ * method that will check if some traveller have order for tomorrow, if so will check if its not been informed for him yet.
+ * if informed, will not do anything.
+ * if found some of them, will return to the client a massege that he have some orders need to be approved.
+ * also this method will change akk the Informed values to 't'
+ */
+	public String checkIfHavingTomorrow(String[] result) {
+		String s ="";
+		System.out.println("HOWMANY");
+		int flag=0;
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT orderNum from project.order WHERE DateOfVisit = ? AND ID=? AND Informed = 'f'");
+
+			ps.setString(1, result[0]); 
+			ps.setString(2,result[1]);
+	
+			ResultSet rs = ps.executeQuery();
+			if(rs.next()) {
+				s=rs.getString(1);
+				flag++;
+			}
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		if(flag>0) {
+			try {// try to get travellers with out order
+				PreparedStatement ps = conn.prepareStatement(
+						"UPDATE project.order SET Informed='t' WHERE DateOfVisit=? AND ID=?");
+				ps.setString(1, result[0]);	
+				ps.setString(2, result[1]);	
+				ps.executeUpdate();		
+			} catch (SQLException e) {
+				System.out.println("Fail gett sumSolo");
+				e.printStackTrace();
+			}
+		}
+		return s;
+	}
+
+	public String checkIfConfirmAlert(String dat, String timeOfVisit) {
+StringBuffer sb = new StringBuffer();
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT orderNum from project.order WHERE DateOfVisit =? AND TimeInPark =? AND status='waitForConfrim'");
+			ps.setString(1, dat); 
+			ps.setString(2, timeOfVisit); 
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				sb.append(rs.getString(1));
+				sb.append(" ");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return sb.toString();
+	}
+	
+	public void cancelOrderForWaiting(String orderNum) {
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"UPDATE project.order SET status='cancelled',comment='Automatic' WHERE orderNum=?");
+			ps.setString(1, orderNum); 
+			ps.executeUpdate();		
+			// waitingList here
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void conAlert(String orderNum) {
+		try {
+			PreparedStatement ps = conn.prepareStatement(
+					"UPDATE project.order SET status='confirmed',comment='OrderConfirmed' WHERE orderNum=?");
+			ps.setString(1, orderNum); 
+			ps.executeUpdate();		
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
 	public boolean logOutEmployee(String userName) {
 		try {
 			PreparedStatement ps1 = conn.prepareStatement("UPDATE employees SET isLoggedIn = 0 Where userName = ?");
@@ -1240,5 +1363,6 @@ public class sqlConnector {
 			e.printStackTrace();
 		}
 	}
+
 }
 

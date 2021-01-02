@@ -21,6 +21,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -44,8 +46,9 @@ import java.util.Scanner;
 public class EchoServer extends AbstractServer {
 	final public static int DEFAULT_PORT = 5555;
 	private Connection conn;
-	sqlConnector sq;
+	static sqlConnector sq;
 	public waitingListController_server server_waitingListController;
+
 
 	// Constructors ****************************************************
 
@@ -128,7 +131,27 @@ public class EchoServer extends AbstractServer {
 					client.sendToClient(str2);
 				}
 				break;
-
+				/*
+				 * This method will check if the visitor have tomorow an order.
+				 * if so, will check if already informed, if not informed, will create a new thread.
+				 * this thread will run for 2 hourse and will check if the status of the order changed. 
+				 * 2 fields: Informed, Confirmed, both false at the start. 
+				 */
+			case "havingAlert":
+				String orderNumber = sq.checkIfHavingTomorrow(result);
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("havingAlert");
+				sb.append(" ");
+				if(!(orderNumber.equals("")))
+				{
+					
+				}
+				sb.append(orderNumber);
+				client.sendToClient(sb.toString());
+				break; 
+				
 			case "connectivity":
 
 				sb = new StringBuffer();
@@ -296,10 +319,28 @@ public class EchoServer extends AbstractServer {
 			 * This method will search for the order and delete it
 			 */
 			case "cancelOrder":
-				sq.changeStatusOfOrder(result, "cancelled");
+				sq.changeStatusOfOrder(result, "cancelled","Manually");
+				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!here WaitingLine!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 				client.sendToClient(done);
 				break;
 
+				//get the prices for the type of group
+			case "getTotalPrice":
+				String  resofDis = sq.getTotalPayload(result[0]);
+				sb= new StringBuffer();
+				sb.append("DiscountController");
+				sb.append(" ");
+				sb.append("getTotalPrice");
+				sb.append(" ");
+				sb.append(result[1]);
+				sb.append(" ");
+				sb.append(result[2]);
+				sb.append(" ");
+				sb.append(resofDis);
+				client.sendToClient(sb.toString());
+				break;
+				
+				
 			case "getDataForReport":
 				int cancelledOrderNumber = sq.checkHowManyCancelled(result, "canceled");
 				int notEnteredOrderNumber = sq.checkHowManyCancelled(result, "confirmed");
@@ -327,7 +368,7 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(sb.toString());
 				break;
 			case "ChangeToWaitOrder":
-				sq.changeStatusOfOrder(result, "waiting");
+				sq.changeStatusOfOrder(result, "waiting","Manually");
 				client.sendToClient(done);
 				break;
 			case "DetailsPark":
@@ -427,6 +468,11 @@ public class EchoServer extends AbstractServer {
 				sb.append(result);
 				client.sendToClient(sb.toString());
 				break;
+			case "confirmAlert":
+				sq.conAlert(result[0]);
+				client.sendToClient(done);
+				break;
+				
 			case "updateStatusForCapacityParkToFull":
 				sq.changeStatusForCapacityParkToFull(result);
 				client.sendToClient(done);
@@ -442,7 +488,7 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(sb.toString());
 				break;
 			case "setEnterOrder":
-				sq.changeStatusOfOrder(result, "Entered");
+				sq.changeStatusOfOrder(result, "Entered","EnteredPark");
 				client.sendToClient(done);
 				break;
 
@@ -477,13 +523,89 @@ public class EchoServer extends AbstractServer {
 		String[] result = msg.split(" ");
 		return result[0];
 	}
+	/*
+	 * This thread will check 24/7 the next condition:
+	 * 	every hour do:
+	 * 	1. take current hour
+	 * 	2. x= minus 2 hours from that
+	 * 	3. take tomorrow day
+	 * 	4. get all the orderes for tomorrow who are :
+	 * 			a. time of x
+	 * 			b. Confirmed = 'f'
+	 * 	5. save all this orders in a string
+	 * 	6. iterate over this string, change status to cancelled
+	 * 	7. get next in line in the waiting list.
+	 */
+	
+	public static class UtilityThread extends Thread{
+		
+		public void run() {
+			LocalTime timeNow;
+			
+			 int min,hour;
+			 String stringForComplete="",dat,stringForHalf="";
+			while(true) {
+				timeNow = LocalTime.now();
+				hour = timeNow.getHour();
+				min =timeNow.getMinute();
+				if(hour<10||hour>20) {
+					try {
+						Thread.sleep(1000 * 60 * 60);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}		
+				else {
+					 if(min==0) {
+						 dat = LocalDate.now().plusDays(1).toString();
+						 hour-=2;
+						 timeNow = LocalTime.parse(Integer.toString(hour)+":"+"00");
+						 stringForComplete= sq.checkIfConfirmAlert(dat,timeNow.toString()); 
+						 try {
+								Thread.sleep(1000 * 60 * 60);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						 
+					 }
+					 if(min==30) {
+						 dat = LocalDate.now().plusDays(1).toString();
+						 hour-=2;
+						 timeNow = LocalTime.parse(Integer.toString(hour)+":"+"30");
+						 
+						 stringForHalf=sq.checkIfConfirmAlert(dat,timeNow.toString());
+						 try {
+								Thread.sleep(1000 * 60 * 60);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+					 }	 
+					
+					 String[] complete =stringForComplete.split(" ");
+					 String[] halfs= stringForHalf.split(" ");
+					 if(!(complete.length==0)) {
+						 for(int i = 0;i<complete.length;i++)
+							 sq.cancelOrderForWaiting(complete[i]);	
+						 	
+					 }
+					 if(!(halfs.length==0)) {
+						 for(int i = 0;i<halfs.length;i++)
+							 sq.cancelOrderForWaiting(halfs[i]);
+						
+					 }
+				}	
+			}
+				
+				    
+		  }  
+	}
 
 	/**
 	 * This method overrides the one in the superclass. Called when the server
 	 * starts listening for connections.
 	 */
 	protected void serverStarted() {
-
+		
 		System.out.println("Server listening for connections on port " + getPort());
 
 		try {
@@ -496,11 +618,15 @@ public class EchoServer extends AbstractServer {
 
 		try {
 
+
 			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
 
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);
+      UtilityThread ut= new UtilityThread();
+			ut.start();
 			server_waitingListController = new waitingListController_server(sq);
+
 
 		} catch (SQLException ex) {/* handle any errors */
 			System.out.println("SQLException: " + ex.getMessage());
