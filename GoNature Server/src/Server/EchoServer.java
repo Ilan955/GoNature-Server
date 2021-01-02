@@ -155,7 +155,9 @@ public class EchoServer extends AbstractServer {
 				sb3.append(sq.addMember(result));
 				client.sendToClient(sb3.toString());
 				break;
-
+			case "deleteFromDbWhenlogOutTraveller":
+				sq.deleteFromDbWhenTravellerLogOut(result[0], result[1]);
+				client.sendToClient("UserController UpdateFieldofLoggedInTraveller");
 			case "getEmployeeDetails":
 				if (sq.canGetEmployee(result[0])) {
 					bar_String = new String[12];
@@ -174,14 +176,13 @@ public class EchoServer extends AbstractServer {
 					client.sendToClient(s2);
 				}
 				break;
+			case "logOutEmployee":
+				if (sq.logOutEmployee(result[0]))
+					client.sendToClient("LoggedOfSuccess");
 			case "getTravellerDetails":
-
-
-				if (sq.canGetTraveller(result[0]))
-				{
-					//System.out.print(result[0]);
+				if (sq.canGetTraveller(result[0])) {
+					// System.out.print(result[0]);
 					bar_String = new String[12];
-
 					bar_String = sq.getTravellerFromDB(result[0]);
 					sb = new StringBuffer();
 					for (int i = 0; i < bar_String.length; i++) {
@@ -194,18 +195,16 @@ public class EchoServer extends AbstractServer {
 				}
 				break;
 
-			case "updateParkChangeRequestStatus": //xxxxxxxxxxx
-					if(sq.updateParkChangeRequestStatus(result[0]))
-					{
-						client.sendToClient("ChangeIsSababa ");
-					}
-					break;
+			case "updateParkChangeRequestStatus": // xxxxxxxxxxx
+				if (sq.updateParkChangeRequestStatus(result[0])) {
+					client.sendToClient("ChangeIsSababa ");
+				}
+				break;
 			case "updateParkChangesWhenPressedApprove":
-				if (sq.updateParkChangesInParkTable(result[0],result[1],result[2],result[3]))
-				{
+				if (sq.updateParkChangesInParkTable(result[0], result[1], result[2], result[3])) {
 					client.sendToClient("parkSettingsAreUpdated ");
 				}
-			case "getParkSettingsRequestsFromDB"://#TRY$%YTRGFG%^Y%^#H
+			case "getParkSettingsRequestsFromDB":// #TRY$%YTRGFG%^Y%^#H
 				String send = sq.getParkSettingsRequests();
 				client.sendToClient(send);
 				break;
@@ -215,8 +214,7 @@ public class EchoServer extends AbstractServer {
 				bar_String[1] = "parkSettingsChangesSent";
 				bar_String[2] = sq.sendParkSettingsRequestToDepManager(result);
 				sb = new StringBuffer();
-				for (int i=0;i<bar_String.length;i++)
-				{
+				for (int i = 0; i < bar_String.length; i++) {
 					sb.append(bar_String[i]);
 					sb.append(" ");
 				}
@@ -547,8 +545,7 @@ public class EchoServer extends AbstractServer {
 
 		try {
 
-			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root",
-					"root");
+			conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/project?serverTimezone=IST", "root", "");
 
 			System.out.println("Successfuly loged-in");
 			sq = new sqlConnector(conn);

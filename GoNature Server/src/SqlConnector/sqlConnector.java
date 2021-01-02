@@ -478,8 +478,6 @@ public class sqlConnector {
 
 	public int howManyForCurrentTimeAndDate(String[] result) throws ParseException {
 		Statement stm;
-		
-		
 
 		int counter = 0;
 		try {
@@ -539,7 +537,7 @@ public class sqlConnector {
 		Statement stm;
 		try {
 			String[] s = userName.split(" "); // new row
-			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.departmentemployee WHERE userName = ?");
+			PreparedStatement ps = conn.prepareStatement("SELECT *  FROM project.employees WHERE userName = ?");
 			stm = conn.createStatement();
 			ps.setString(1, s[0]);// new row
 			ps.executeQuery();
@@ -554,9 +552,10 @@ public class sqlConnector {
 	{
 		Statement stm;
 		String check[] = empID.split(" ");
-		String[] s = new String[12];
+		String[] s = new String[14];
+		int isLogged = 0;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.departmentemployee WHERE userName = ?");
+			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.employees WHERE userName = ?");
 			stm = conn.createStatement();
 			ps.setString(1, check[0]);
 			ResultSet rs = ps.executeQuery();
@@ -566,6 +565,7 @@ public class sqlConnector {
 			while (rs.next()) {
 				for (int i = 2; i < 12; i++)
 					s[i] = rs.getString(i - 1);
+				isLogged = rs.getInt(11);
 			}
 			if (s[10] == null)
 				s[1] = "IdentifyNotExistingEmployee"; // Means that we didn't find an employee with this userName
@@ -573,18 +573,27 @@ public class sqlConnector {
 													// GoNature system
 				s[1] = "IdentifyPasswordDoesNotMatch";
 				s[11] = null;
+			} else if (isLogged == 1) {
+				s[1] = "employeeAlreadyLoggedIn";
+			} else {
+				PreparedStatement ps1 = conn.prepareStatement("UPDATE employees SET isLoggedIn = 1 Where userName = ?");
+				Statement stm1 = conn.createStatement();
+				ps1.setString(1, check[0]);
+				ps1.executeUpdate();
 			}
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return s;
 	}
 
-	public void changeStatusOfOrder(String[] result,String status) {
+	public void changeStatusOfOrder(String[] result, String status) {
 		Statement stm;
 
 		try {
-			PreparedStatement ps = conn.prepareStatement("UPDATE gonaturedb.order SET status=? WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
+			PreparedStatement ps = conn.prepareStatement(
+					"UPDATE gonaturedb.order SET status=? WHERE TimeInPark=? AND DateOfVisit=? AND wantedPark=? AND ID=?");
 			ps.setString(1, status);
 			ps.setString(2, result[0]);
 			ps.setString(3, result[1]);
@@ -593,7 +602,7 @@ public class sqlConnector {
 			ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			
+
 		}
 	}
 
@@ -626,7 +635,8 @@ public class sqlConnector {
 		int unexpectedVisitors = 0;
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE parkName=?");
+			PreparedStatement ps = conn
+					.prepareStatement("SELECT AmoutOfUnExpectedVisitors FROM project.park WHERE parkName=?");
 
 			ps.setString(1, parkName);
 			stm = conn.createStatement();
@@ -689,6 +699,18 @@ public class sqlConnector {
 		String[] s = new String[12]; // should be as number fields number in traveller class
 		// I am working currently on a DB with 5 fields for traveller. It works
 		try {
+			PreparedStatement ps1 = conn.prepareStatement("SELECT * FROM project.loggedintravellers WHERE id = ?");
+			ps1.setString(1, travellerID);
+			ResultSet rs1 = ps1.executeQuery();
+			if (rs1.next()) {
+				s[0] = "UserController";
+				s[1] = "AlreadyLoggedIn";
+				return s;
+			} else {
+				PreparedStatement ps2 = conn.prepareStatement("insert into loggedintravellers values (?,1)");
+				ps2.setString(1, travellerID);
+				ps2.execute();
+			}
 			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.person WHERE id = ? OR memberID = ?");
 			stm = conn.createStatement();
 			ps.setString(1, travellerID);
@@ -704,17 +726,13 @@ public class sqlConnector {
 				s[6] = rs.getString(5);
 				s[7] = rs.getString(6);
 				s[8] = rs.getString(7);
-				s[9] = null;
 				temp = rs.getInt(8);
 				s[10] = rs.getString(9);
-				s[11] = rs.getString(10);
 			}
 			s[9] = ("" + temp);
 			if (s[5] == null) {
 				s[1] = "IdentifyNotExistingTraveller";
-
 				s[5] = "" + travellerID;
-
 			}
 			// System.out.print(rs.getString(i).toString());
 		} catch (SQLException e) {
@@ -762,7 +780,8 @@ public class sqlConnector {
 	public void updateUnexpectedVisitors(String[] msg) {
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE parkName=?");
+			PreparedStatement ps = conn
+					.prepareStatement("UPDATE project.park SET AmoutOfUnExpectedVisitors=? WHERE parkName=?");
 
 			ps.setString(1, msg[0]);
 			ps.setString(2, msg[1]);
@@ -979,9 +998,9 @@ public class sqlConnector {
 			ps.setString(3, msg[2]); // park
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-					s.append(rs.getString(1));
-					s.append(" ");
-				}
+				s.append(rs.getString(1));
+				s.append(" ");
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 
@@ -1050,11 +1069,13 @@ public class sqlConnector {
 		sb.append(sumGroups);
 		return sb.toString();
 	}
+
 	public String sendParkSettingsRequestToDepManager(String[] s) {
 		Statement stm;
 		int id = sendNewRequestID();
 		try {
-			PreparedStatement ps = conn.prepareStatement("insert into project.newparksettingsrequests values (?, ?, ?, ?, ?, ?, ?, ?)");
+			PreparedStatement ps = conn
+					.prepareStatement("insert into project.newparksettingsrequests values (?, ?, ?, ?, ?, ?, ?, ?)");
 			ps.setInt(1, id);
 			LocalDate start = LocalDate.parse(s[1]);
 			Date startDate = java.sql.Date.valueOf(start);
@@ -1062,33 +1083,35 @@ public class sqlConnector {
 			Time hour = java.sql.Time.valueOf(time);
 			ps.setDate(2, startDate);
 			ps.setTime(3, hour);
-			ps.setString(4,s[3]);
+			ps.setString(4, s[3]);
 			ps.setInt(5, Integer.parseInt(s[4]));
 			ps.setInt(6, Integer.parseInt(s[5]));
-			ps.setFloat(7,Float.parseFloat(s[6]));
+			ps.setFloat(7, Float.parseFloat(s[6]));
 			ps.setInt(8, Integer.parseInt(s[7]));
 			ps.executeUpdate();
-		}catch (SQLException e) {
-			return "false";			
+		} catch (SQLException e) {
+			return "false";
 		}
 		return "true";
 	}
+
 	public int sendNewRequestID() { // xxxxxxxxxxx
 		Statement stm;
 		int i = 0;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS rowcount FROM project.newparksettingsrequests");
+			PreparedStatement ps = conn
+					.prepareStatement("SELECT COUNT(*) AS rowcount FROM project.newparksettingsrequests");
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
 			rs.next();
 			i = rs.getInt("rowcount");
 			rs.close();
-
 		} catch (SQLException e) {
 			return -1;
 		}
 		return ++i;
 	}
+
 	public String getParkSettingsRequests() {
 		String s;
 		StringBuffer sb = new StringBuffer();
@@ -1096,27 +1119,28 @@ public class sqlConnector {
 		sb.append("displayParkSettingsRequestsToDepartmentManager ");
 		int i = 2;
 		int idReq = 0;
-		String date="";
-		String time="";
-		String wantedPark="";
-		int maxVisit=0,gapBetween=0;
-		float maxDur=0;
-		
+		String date = "";
+		String time = "";
+		String wantedPark = "";
+		int maxVisit = 0, gapBetween = 0, len = 0;
+		float maxDur = 0;
+
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT * FROM project.newparksettingsrequests WHERE status = ?");
+			PreparedStatement ps = conn
+					.prepareStatement("SELECT * FROM project.newparksettingsrequests WHERE status = ?");
 			stm = conn.createStatement();
 			ps.setInt(1, 0);
 			ResultSet rs = ps.executeQuery();
-			while(rs.next()) {
+			while (rs.next()) {
 				idReq = rs.getInt(1);
-				date+=rs.getString(2);
-				time+=rs.getString(3);
-				wantedPark=rs.getString(4);
-				maxVisit=rs.getInt(5);
-				gapBetween=rs.getInt(6);
-				maxDur=rs.getFloat(7);	
-				sb.append("" +idReq);
+				date += rs.getString(2);
+				time += rs.getString(3);
+				wantedPark = rs.getString(4);
+				maxVisit = rs.getInt(5);
+				gapBetween = rs.getInt(6);
+				maxDur = rs.getFloat(7);
+				sb.append("" + idReq);
 				sb.append(" ");
 				sb.append(wantedPark + " ");
 				sb.append(date + " ");
@@ -1124,32 +1148,31 @@ public class sqlConnector {
 				sb.append("" + maxVisit + " ");
 				sb.append("" + gapBetween + " ");
 				sb.append("" + maxDur + " ");
-				idReq=0;
-				date="";
-				time="";
-				wantedPark="";
-				maxVisit=0;
-				gapBetween=0;
-				maxDur=0;
-			} 
-		}
-			catch (SQLException e) {
-				return null;
+				idReq = 0;
+				date = "";
+				time = "";
+				wantedPark = "";
+				maxVisit = 0;
+				gapBetween = 0;
+				maxDur = 0;
 			}
+		} catch (SQLException e) {
+			return null;
+		}
 		sb.append("Done");
-		s= sb.toString();
+		s = sb.toString();
 		return s;
 	}
 	////// Reports end/////
 
-
 	public boolean updateParkChangeRequestStatus(String string) {
-		
+
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("UPDATE project.newparksettingsrequests SET status=? WHERE requestID=?");
+			PreparedStatement ps = conn
+					.prepareStatement("UPDATE project.newparksettingsrequests SET status=? WHERE requestID=?");
 			ps.setInt(1, 1);
-			ps.setInt(2,Integer.parseInt(string));
+			ps.setInt(2, Integer.parseInt(string));
 			ps.executeUpdate();
 			return true;
 		} catch (SQLException e) {
@@ -1158,13 +1181,14 @@ public class sqlConnector {
 		}
 	}
 
-	public boolean updateParkChangesInParkTable(String parkName,String maxVisitors,String gap,String maxDur) {
+	public boolean updateParkChangesInParkTable(String parkName, String maxVisitors, String gap, String maxDur) {
 		Statement stm;
 		try {
-			PreparedStatement ps = conn.prepareStatement("UPDATE project.park SET maxVisitors=? , maxAvailableVisitors = ?, maxDuration = ?  WHERE parkName= ? ");
+			PreparedStatement ps = conn.prepareStatement(
+					"UPDATE project.park SET maxVisitors=? , maxAvailableVisitors = ?, maxDuration = ?  WHERE parkName= ? ");
 			ps.setInt(1, Integer.parseInt(maxVisitors));
 			int maxAvailable = Integer.parseInt(maxVisitors) - Integer.parseInt(gap);
-			ps.setInt(2,maxAvailable);
+			ps.setInt(2, maxAvailable);
 			ps.setFloat(3, Float.parseFloat(maxDur));
 			ps.setString(4, parkName);
 			ps.executeUpdate();
@@ -1173,22 +1197,23 @@ public class sqlConnector {
 			e.printStackTrace();
 			return false;
 		}
+		// need to return a value to parkController (set new changes)
 	}
 
-	public int checkHowManyCancelled(String[] result,String status) {
+	public int checkHowManyCancelled(String[] result, String status) {
 		Statement stm;
-		int counter=0;
-	
+		int counter = 0;
+
 		try {
 			PreparedStatement ps = conn.prepareStatement(
 					"SELECT * from gonaturedb.order WHERE status = ? AND DateOfVisit BETWEEN ? AND ?");
-	
-			ps.setString(1, status); 
-			ps.setString(2, result[0]); 
-			ps.setString(3, result[1]); 
-			
+
+			ps.setString(1, status);
+			ps.setString(2, result[0]);
+			ps.setString(3, result[1]);
+
 			ResultSet rs = ps.executeQuery();
-			while(rs.next()) {
+			while (rs.next()) {
 				counter++;
 			}
 
@@ -1197,5 +1222,32 @@ public class sqlConnector {
 
 		}
 		return counter;
+	}
+
+	public boolean logOutEmployee(String userName) {
+		try {
+			PreparedStatement ps1 = conn.prepareStatement("UPDATE employees SET isLoggedIn = 0 Where userName = ?");
+			Statement stm1 = conn.createStatement();
+			ps1.setString(1, userName);
+			ps1.executeUpdate();
+		} catch (SQLException e) {
+			return false;
+		}
+		return true;
+	}
+
+	public void deleteFromDbWhenTravellerLogOut(String travellerID, String memberID) {
+		try {
+			PreparedStatement ps1 = conn.prepareStatement("delete from loggedintravellers where id = ?");
+			Statement stm1 = conn.createStatement();
+			ps1.setString(1, travellerID);
+			ps1.execute();
+			PreparedStatement ps2 = conn.prepareStatement("delete from loggedintravellers where id = ?");
+			Statement stm2 = conn.createStatement();
+			ps2.setString(1, memberID);
+			ps2.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 }
