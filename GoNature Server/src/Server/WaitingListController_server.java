@@ -61,11 +61,11 @@ public class WaitingListController_server {
 									{
 										/*Cancel order in orders table DB*/
 										if(confirmation.equals("f")) {
-											//TODO Manual cancelation
+											//TODO Manual cancellation
 											break; // Go to next waiting order
 										}
 										else if (limit.compareTo(now) < 0) {
-											//TODO Automatic cancelation (1 hour passed) 
+											//TODO Automatic cancellation (1 hour passed) 
 											break; // Go to next waiting order
 										}
 									}
