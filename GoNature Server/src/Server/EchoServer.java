@@ -441,15 +441,17 @@ public class EchoServer extends AbstractServer {
 
 			case "getExsistingOrders":
 				String res1 = sq.getOrders(result[0]);
-
+				
 				sb = new StringBuffer();
-				sb.append("ReportsController");// the name of the controller
+				sb.append("OrderController");
 				sb.append(" ");
-
+				sb.append("getExsistingOrders");// the name of the controller
+				sb.append(" ");
 				sb.append(res1);
 				client.sendToClient(sb.toString());
 				break;
 			case "ChangeToWaitOrder":
+				System.out.println("Here1");
 				sq.changeStatusOfOrder(result, "InWaitingList", "Manually");
 				client.sendToClient(done);
 				break;
@@ -533,6 +535,16 @@ public class EchoServer extends AbstractServer {
 				sb.append(res3);
 				client.sendToClient(sb.toString());
 				break;
+				
+				/**
+				 * this case change enter time for traveller with order
+				 */
+				case "updateEnterTimeForTravellerWithOrder":
+					sq.enterEnterTimeForTravellerWithOrder(result);
+					client.sendToClient(done);
+					break;
+					
+					
 			case "updateExitTimeForTravellerWithOrder":
 				sq.enterExitTimeForTravellerWithOrder(result);
 				client.sendToClient(done);
@@ -597,6 +609,12 @@ public class EchoServer extends AbstractServer {
 				sq.insertfullcapacityPark(result);
 				client.sendToClient(done);
 				break;
+				
+			case "changeMaxcurrentAmountOfVisitorsForCapacityPark":
+				sq.changeMaxcurrentAmountOfVisitorsForCapacityPark(result);
+				client.sendToClient(done);
+				break;
+				
 			case "checkIfThisDateInFullCapacityTable":
 				boolean answer1 = sq.isDateInfullcapacityExists(result);
 				StringBuffer sb6 = new StringBuffer();
@@ -616,6 +634,22 @@ public class EchoServer extends AbstractServer {
 				sq.changeStatusForCapacityParkToFull(result);
 				client.sendToClient(done);
 				break;
+				
+				/**
+				 * this case get max current of visitors in specfic date and park
+				 */
+				case "getMaxcurrentVisitorsPerDay":
+					int max = sq.getMaxcurrentVisitorsPerDay(result);
+					sb = new StringBuffer();
+					sb.append("ParkController");
+					sb.append(" ");
+					sb.append("getMaxcurrentVisitorsPerDay");
+					sb.append(" ");
+					sb.append(String.valueOf(max));
+					client.sendToClient(sb.toString());
+					break;
+					
+					
 			case "getTableOfUnFullCapacityInDates":
 				String st1 = sq.getUnFullCapacityTableInDates(result);
 				sb = new StringBuffer();
@@ -630,6 +664,20 @@ public class EchoServer extends AbstractServer {
 				sq.changeStatusOfOrder(result, "Entered", "EnteredPark");
 				client.sendToClient(done);
 				break;
+				
+				/**
+				 * this case get table of unfull capacity dates for usage report
+				 */
+				case "getUnFullCapacityTableInDatesAndNumbers":
+					String st3 = sq.getUnFullCapacityTableInDatesAndNumbers(result);
+					sb = new StringBuffer();
+					sb.append("ReportsController");
+					sb.append(" ");
+					sb.append("getUnFullCapacityTableInDatesAndNumbers");
+					sb.append(" ");
+					sb.append(st3);
+					client.sendToClient(sb.toString());
+					break;
 
 			default:
 				System.out.println("Sorry, don't know what you presse Now");
