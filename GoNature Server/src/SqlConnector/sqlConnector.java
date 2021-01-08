@@ -390,6 +390,7 @@ public class sqlConnector {
 	 */
 	public void changeStatusOfOrder(String[] result, String status, String comment) {
 		Statement stm;
+		System.out.println("Here22");
 
 		try {
 			PreparedStatement ps = conn.prepareStatement(
@@ -420,7 +421,7 @@ public class sqlConnector {
 		StringBuffer s = new StringBuffer();
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice,status,comment FROM project.order WHERE ID=? AND status='waitForConfirm' OR status='confirmed' OR status='InWaitingList;");
+					"SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice,status,comment FROM project.order WHERE ID=? AND (status='waitForConfirm' OR status='confirmed' OR status='InWaitingList')");
 			ps.setString(1, iD);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -803,8 +804,14 @@ public class sqlConnector {
 
 	
 	
-	/*----------------------------------- Park controller start	------------------------ */
+	//Park controller start	
 
+		/**
+		 * this method get max available visitors in park
+		 * 
+		 * @param parkName
+		 * @return max available visitors in park
+		 */
 		public int howManyAllowedInPark(String parkName) {
 			String res;
 			int counter = 0;
@@ -829,6 +836,12 @@ public class sqlConnector {
 			return counter;
 		}
 
+		/**
+		 * this method get current unexpected visitors in park
+		 * 
+		 * @param parkName
+		 * @return current unexpected visitors in park
+		 */
 		public int howManyUnexpectedVisitorsInPark(String parkName) {
 			String res;
 			int unexpectedVisitors = 0;
@@ -851,6 +864,12 @@ public class sqlConnector {
 			return unexpectedVisitors;
 		}
 
+		/**
+		 * this method get current visitors now in park
+		 * 
+		 * @param parkName
+		 * @return current visitors in park
+		 */
 		public int howManyCurrentvisitorsForOrdersInPark(String parkName) {
 			String res;
 			int currentvisitors = 0;
@@ -871,6 +890,12 @@ public class sqlConnector {
 			return currentvisitors;
 		}
 
+		/**
+		 * this method getmax visitors now in park
+		 * 
+		 * @param parkName
+		 * @return max visitors in park
+		 */
 		public int howManyMaxvisitorsAllowedInPark(String parkName) {
 			String res;
 			int Maxvisitors = 0;
@@ -891,6 +916,12 @@ public class sqlConnector {
 			return Maxvisitors;
 		}
 
+		/**
+		 * this method get max duration in park
+		 * 
+		 * @param parkName
+		 * @return max duration in park
+		 */
 		public float howmanyTimeEveryVisitorInPark(String parkName) {
 			String res;
 			float time = 0;
@@ -911,6 +942,11 @@ public class sqlConnector {
 			return time;
 		}
 
+		/**
+		 * this method insert data for full capacity table
+		 * 
+		 * @param result- data of full capacity table
+		 */
 		public void insertfullcapacityPark(String[] result) {
 			Statement stm;
 			LocalDate wanted1 = LocalDate.parse(result[1]);
@@ -933,6 +969,11 @@ public class sqlConnector {
 
 		}
 
+		/**
+		 * this method update max current amount of visitors to full capacity table
+		 * 
+		 * @param msg- max current per day and park
+		 */
 		public void changeMaxcurrentAmountOfVisitorsForCapacityPark(String[] msg) {
 			Statement stm;
 			try {
@@ -947,6 +988,12 @@ public class sqlConnector {
 
 		}
 
+		/**
+		 * this method check if this date per park in DB
+		 * 
+		 * @param msg- park name
+		 * @return true if succeed and false if not succeed
+		 */
 		public boolean isDateInfullcapacityExists(String[] msg) {
 			Statement stm;
 			try {
@@ -967,6 +1014,11 @@ public class sqlConnector {
 			return false;
 		}
 
+		/**
+		 * this method update status for capacity park to full
+		 * 
+		 * @param msg -park name
+		 */
 		public void changeStatusForCapacityParkToFull(String[] msg) {
 			Statement stm;
 			try {
@@ -980,6 +1032,12 @@ public class sqlConnector {
 
 		}
 
+		/**
+		 * this method get max current visitors per day
+		 * 
+		 * @param msg- park name
+		 * @return max current visitors per day in specific park
+		 */
 		public int getMaxcurrentVisitorsPerDay(String[] msg) {
 			String res;
 			int max = 0;
@@ -1001,10 +1059,14 @@ public class sqlConnector {
 			return max;
 		}
 
-		/*-------------------------------- Park controller end ---------------------------- */
+		// Park controller end
 
-		/*------------------------------ EntrancePark controller start ---------------- */
-
+		// EntrancePark controller start
+		/**
+		 * this method update amount of unexpected visitors in park
+		 * 
+		 * @param msg- amount of unexpectd visitors and park name
+		 */
 		public void updateUnexpectedVisitors(String[] msg) {
 			Statement stm;
 			try {
@@ -1020,6 +1082,11 @@ public class sqlConnector {
 			}
 		}
 
+		/**
+		 * this method update current visitors in park
+		 * 
+		 * @param msg- amount of current visitors and park name
+		 */
 		public void updateCurrentVisitors(String[] msg) {
 			Statement stm;
 			try {
@@ -1032,6 +1099,11 @@ public class sqlConnector {
 			}
 		}
 
+		/**
+		 * update enter time of traveller with order in order table
+		 * 
+		 * @param msg -park name and ID
+		 */
 		public void enterEnterTimeForTravellerWithOrder(String[] msg) {
 			Statement stm;
 			try {
@@ -1047,6 +1119,11 @@ public class sqlConnector {
 			}
 		}
 
+		/**
+		 * update exit time of traveller with order in order table
+		 * 
+		 * @param msg -park name and ID
+		 */
 		public void enterExitTimeForTravellerWithOrder(String[] msg) {
 			Statement stm;
 			try {
@@ -1062,6 +1139,11 @@ public class sqlConnector {
 			}
 		}
 
+		/**
+		 * update enter time of traveller without order in travellerinpark table
+		 * 
+		 * @param msg -park name and ID
+		 */
 		public void enterExitTimeForcasualTraveller(String[] msg) {
 			Statement stm;
 			try {
@@ -1075,6 +1157,11 @@ public class sqlConnector {
 			}
 		}
 
+		/**
+		 * this method insert traveller to travellerinpark table
+		 * 
+		 * @param result - parameters for travellerinpark table
+		 */
 		public void insertTravellerInPark(String[] result) {
 			Statement stm;
 			LocalDate wanted1 = LocalDate.parse(result[2]);
@@ -1097,7 +1184,11 @@ public class sqlConnector {
 			}
 
 		}
-
+	/**
+	 * this method check if traveller exists in DB
+	 * @param msg- ID
+	 * @return true if traveller exists in travellerinpark table and fale if not exists
+	 */
 		public boolean isTravellerExistsInPark(String[] msg) {
 			Statement stm;
 			try {
@@ -1117,7 +1208,11 @@ public class sqlConnector {
 			}
 			return false;
 		}
-
+	/**
+	 * this method get details of travellerinpark table
+	 * @param id
+	 * @return traveller details
+	 */
 		public String getTravellerInParkDetails(String id) {
 			Statement stm;
 			int num;
@@ -1140,7 +1235,11 @@ public class sqlConnector {
 
 			return s.toString();
 		}
-
+	/**
+	 * this method check if order exists in DB 
+	 * @param msg - ID
+	 * @return true if exists, else- not exists 
+	 */
 		public boolean isOrderExistsInPark(String[] msg) {
 			Statement stm;
 			try {
@@ -1160,7 +1259,11 @@ public class sqlConnector {
 			}
 			return false;
 		}
-
+	/**
+	 * this methods get details for exit park
+	 * @param id
+	 * @return order details 
+	 */
 		public String getOrderDetailsForExitPark(String id) {
 			Statement stm;
 			int num;
@@ -1183,11 +1286,14 @@ public class sqlConnector {
 
 			return s.toString();
 		}
-		/*------------------------------------------ EntrancePark controller end --------------------------------- */
-		
-		/*------------------------------------------ Report controller start --------------------------------- */
+		// EntrancePark controller end
 
-		
+		// Report controller start
+		/**
+		 * this method gets details of full capacity table for usage report
+		 * @param msg - month &year
+		 * @return details of full capacity table
+		 */
 		public String getUnFullCapacityTableInDates(String[] msg) {
 			Statement stm;
 			StringBuffer s = new StringBuffer();
@@ -1210,7 +1316,11 @@ public class sqlConnector {
 
 			return s.toString();
 		}
-
+		/**
+		 * this method gets details of full capacity table for usage report
+		 * @param msg - month &year
+		 * @return details of full capacity table
+		 */
 		public String getUnFullCapacityTableInDatesAndNumbers(String[] msg) {
 			Statement stm;
 			StringBuffer s = new StringBuffer();
@@ -1240,6 +1350,10 @@ public class sqlConnector {
 		// Report controller end
 
 		// Requests controller start
+		/**
+		 * this method insert details to request table
+		 * @param result - details for enter request details
+		 */
 		public void insertRequest(String[] result) {
 			Statement stm;
 			LocalDate wanted1 = LocalDate.parse(result[1]);
@@ -1261,7 +1375,11 @@ public class sqlConnector {
 			}
 
 		}
-
+	/**
+	 * this method check if the request is approve
+	 * @param result- id&type
+	 * @return status of request- 0 for unapprove and 1 for approve
+	 */
 		public int IsApproveEnterParkForTraveller(String[] result) {
 			String res;
 			int status = -1;
@@ -1283,7 +1401,11 @@ public class sqlConnector {
 			}
 			return status;
 		}
-
+	/**
+	 * this method get details from request table
+	 * @param park
+	 * @return details request table
+	 */
 		public String getRequestTableOfEnterPark(String park) {
 			Statement stm;
 			StringBuffer s = new StringBuffer();
@@ -1306,7 +1428,10 @@ public class sqlConnector {
 
 			return s.toString();
 		}
-
+	/**
+	 * this method change request status in request table
+	 * @param msg- status, id and park
+	 */
 		public void changeRequestStatusForCasualTraveller(String[] msg) {
 			Statement stm;
 			try {
@@ -1321,7 +1446,7 @@ public class sqlConnector {
 			}
 
 		}
-		/*-------------------------------------------  Requests controller end ------------------------------------------- */
+		// Requests controller end
 		
 		/*---------------------------------------------- Discounts Start ---------------------------------------------------*/				
 		public boolean isDiscountWaitingForApprove(String rowNumber) {
@@ -1480,7 +1605,7 @@ public class sqlConnector {
 				Statement stm;
 				PreparedStatement ps;
 				try {
-					ps = conn.prepareStatement("UPDATE `project`.`managerdiscounts` SET `startDate` = ?, `lastDate` = ?, `precentage` = ?, `status` = ?, `sentDate` = ?, `sentTime` = ? WHERE (`parkName` = ?);");
+					ps = conn.prepareStatement("UPDATE project.managerdiscounts SET startDate = ?, lastDate = ?, precentage = ?, status = ?, sentDate = ?, sentTime = ?  where parkName = ?");
 					LocalDate start = LocalDate.parse(startDate);
 					Date startDate1 = java.sql.Date.valueOf(start);
 
@@ -1498,9 +1623,9 @@ public class sqlConnector {
 					ps.setDate(2, endDate);// set end Date
 					ps.setFloat(3, Float.valueOf(precentage));// set precentage (casting)
 					ps.setString(4,"waitingForApprove"); // set status , will be changed by D_M to 'T' if approved OR 'F' if not
-					ps.setString(5, parkName);//
-					ps.setDate(6, requestDate);
-					ps.setTime(7, now);
+					ps.setDate(5, requestDate);//
+					ps.setTime(6, now);
+					ps.setString(7, parkName);
 					ps.executeUpdate();
 					return true;
 				} catch (SQLException e) {
