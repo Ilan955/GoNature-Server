@@ -24,6 +24,7 @@ import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 
@@ -631,13 +632,11 @@ public class sqlConnector {
 		int cnt;
 		int income = 0;
 		LocalDate date = LocalDate.parse(date_month);
-		LocalDate from = date.withDayOfMonth(1); // start of month date
-		LocalDate to = from.plusMonths(1);//start of next month date
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT count(*) ,sum(TotalPrice) FROM project.order WHERE type = ? && (DateOfVisit >= ? &&  DateOfVisit < ?) && status = 'done'");
+			PreparedStatement ps = conn.prepareStatement("SELECT count(*) ,sum(TotalPrice) FROM project.order WHERE type = ? && (MONTH(DateOfVisit) = ? AND YEAR(DateOfVisit) = ?) && status = 'done'");
 			ps.setString(1,type);
-			ps.setString(2,from.toString());
-			ps.setString(3,to.toString());
+			ps.setInt(2,date.getMonthValue());//MONTH
+			ps.setInt(3,date.getYear());//YEAR
 			ResultSet rs = ps.executeQuery();
 			rs.next();
 			cnt = rs.getInt(1);//count(*)
@@ -661,12 +660,10 @@ public class sqlConnector {
 		int cnt;
 		int income = 0;
 		LocalDate date = LocalDate.parse(date_month);
-		LocalDate from = date.withDayOfMonth(1); // start of month date
-		LocalDate to = from.plusMonths(1);//start of next month date
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT count(*) ,sum(price) FROM project.travellerinpark WHERE (DateOfVisit >= ? &&  DateOfVisit < ?) && inPark = 0");
-			ps.setString(1,from.toString());
-			ps.setString(2,to.toString());
+			PreparedStatement ps = conn.prepareStatement("SELECT count(*) ,sum(price) FROM project.travellerinpark WHERE (MONTH(Date) = ? AND YEAR(Date) = ?) && inPark = 0");
+			ps.setInt(1,date.getMonthValue());//MONTH
+			ps.setInt(2,date.getYear());//YEAR
 			ResultSet rs = ps.executeQuery();
 			rs.next();
 			cnt = rs.getInt(1);//count(*)
@@ -1678,10 +1675,12 @@ public class sqlConnector {
 			 * @return boolean: true if successed
 			 */
 			public boolean addToWaitingList(String orderNum) {
+				LocalDateTime now = LocalDateTime.now();
 				try {
 					PreparedStatement ps = conn.prepareStatement(
-							"INSERT INTO `project`.`waitinglist` (`watingOrder`, `timestamp`) VALUES (?, 'NOW()')");
+							"INSERT INTO project.waitinglist SET waitingOrder=? ,timestamp=?");
 					ps.setString(1, orderNum);
+					ps.setString(2,now.toString());
 					ps.executeUpdate();
 					return true;
 
@@ -1835,8 +1834,8 @@ public class sqlConnector {
 					Date startDate = java.sql.Date.valueOf(start);
 					LocalTime time = LocalTime.parse(s[2]);
 					Time hour = java.sql.Time.valueOf(time);
-					ps.setDate(2, startDate);
-					ps.setTime(3, hour);
+					ps.setString(2, startDate.toString());
+					ps.setString(3, hour.toString());
 					ps.setString(4, s[3]);
 					ps.setInt(5, Integer.parseInt(s[4]));
 					ps.setInt(6, Integer.parseInt(s[5]));
