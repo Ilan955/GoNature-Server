@@ -369,9 +369,11 @@ public class EchoServer extends AbstractServer {
 
 			case"makeMonthlyIncomeReport":
 			      sb = new StringBuffer();
+			      sb.append("ReportsController");
+			      sb.append(" ");
+			      sb.append("makeMonthlyIncomeReport");// The name of the method
+			      sb.append(" ");
 			          sb.append(sq.getMonthlyIncomes(result[0],"Traveler"));//result[0] = Date 
-			          sb.append(" ");
-			          sb.append("makeMonthlyIncomeReport");// The name of the method
 			          sb.append(" ");
 			          sb.append(sq.getMonthlyIncomes(result[0],"Member"));//result[0] = Date 
 					  sb.append(" ");
@@ -425,8 +427,8 @@ public class EchoServer extends AbstractServer {
 				break;
 
 			case "getDataForReport":
-				int cancelledOrderNumber = sq.checkHowManyCancelled(result, "canceled");
-				int notEnteredOrderNumber = sq.checkHowManyCancelled(result, "confirmed");
+				int cancelledOrderNumber = sq.checkHowManyCancelled(result, "cancelled");
+				int notEnteredOrderNumber = sq.checkHowManyCancelled(result, "done");
 
 				sb = new StringBuffer();
 				sb.append("OrderController");
