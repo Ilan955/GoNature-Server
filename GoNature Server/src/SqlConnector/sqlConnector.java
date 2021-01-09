@@ -197,15 +197,15 @@ public class sqlConnector {
 		Statement stm;
 		int i = 0;
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT orderNum FROM project.order ORDER BY orderNum DESC ");
+			PreparedStatement ps = conn.prepareStatement("SELECT orderNum FROM project.order");
 			stm = conn.createStatement();
 			ResultSet rs = ps.executeQuery();
-			if (rs.isLast())
-				System.out.println("GREAT!");
+			
+				
 			while (rs.next()) {
 				String tmp = rs.getString(1);
 				i = Integer.parseInt(tmp);
-				break;
+				
 			}
 
 		} catch (SQLException e) {
@@ -319,7 +319,7 @@ public class sqlConnector {
 		try {
 			PreparedStatement ps = conn.prepareStatement(
 
-					"SELECT numOfVisitors,orderNum FROM project.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? AND status= 'confirmed' OR status='entered' ");
+					"SELECT numOfVisitors,orderNum FROM project.order WHERE wantedPark=? AND DateOfVisit=? AND TimeInPark BETWEEN ? AND ? AND (status= 'waitForConfirm' OR (status='entered' OR status='confirmed'))");
 
 			ps.setString(1, result[2]);
 			ps.setString(3, result[0]);
@@ -329,7 +329,7 @@ public class sqlConnector {
 			stm = conn.createStatement();
 			while (rs.next()) {
 				counter += rs.getInt(1);
-				System.out.println(rs.getString(2));
+				
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -391,7 +391,7 @@ public class sqlConnector {
 	 */
 	public void changeStatusOfOrder(String[] result, String status, String comment) {
 		Statement stm;
-		System.out.println("Here22");
+		
 
 		try {
 			PreparedStatement ps = conn.prepareStatement(
@@ -422,7 +422,7 @@ public class sqlConnector {
 		StringBuffer s = new StringBuffer();
 		try {
 			PreparedStatement ps = conn.prepareStatement(
-					"SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice,status,comment FROM project.order WHERE ID=? AND (status='waitForConfirm' OR status='confirmed' OR status='InWaitingList')");
+					"SELECT orderNum,DateOfVisit,wantedPark,TimeInPark,numOfVisitors,TotalPrice,status,comment FROM project.order WHERE ID=? AND (status='waitForConfirm' OR status='confirmed' OR status='InWaitingList' OR status='waitForConfirm_WaitingList')");
 			ps.setString(1, iD);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -452,7 +452,7 @@ public class sqlConnector {
 	 */
 	public String checkIfHavingTomorrow(String[] result) {
 		String s = "";
-		System.out.println("HOWMANY");
+		
 		int flag = 0;
 		try {
 			PreparedStatement ps = conn.prepareStatement(
@@ -478,7 +478,7 @@ public class sqlConnector {
 				ps.setString(2, result[1]);
 				ps.executeUpdate();
 			} catch (SQLException e) {
-				System.out.println("Fail gett sumSolo");
+				
 				e.printStackTrace();
 			}
 		}
@@ -703,7 +703,7 @@ public class sqlConnector {
 			}
 			rs.close();
 		} catch (SQLException e) {
-			System.out.println("Fail gett sumSolo");
+			
 			e.printStackTrace();
 		}
 		try {// try to get members and family members with order
@@ -719,7 +719,7 @@ public class sqlConnector {
 			}
 			rs.close();
 		} catch (SQLException e) {
-			System.out.println("Fail get sumMember");
+			
 			e.printStackTrace();
 		}
 		try {// try to get Groups members with order
@@ -735,7 +735,7 @@ public class sqlConnector {
 			}
 			rs.close();
 		} catch (SQLException e) {
-			System.out.println("Fail geting sumGroup");
+			
 			e.printStackTrace();
 		}
 		sb.append(sumSolo);
@@ -816,7 +816,7 @@ public class sqlConnector {
 			try {
 				PreparedStatement ps = conn
 
-						.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE parkName=?");
+						.prepareStatement("SELECT maxAvailableVisitors FROM project.park WHERE ParkName=?");
 
 				ps.setString(1, parkName);
 
@@ -1323,7 +1323,7 @@ public class sqlConnector {
 			StringBuffer s = new StringBuffer();
 			try {
 				PreparedStatement ps = conn.prepareStatement(
-						"SELECT date_format(date, \"%e/%c\" ),maxVisitors,maxCurrentPerDay FROM project.fullcapacity WHERE month(date)=? and year(date)=? and park=? and full=0");
+						"SELECT date_format(date, \"%e/%c\" ),maxVisitors,maxCurrentPerDay FROM project.fullcapacity WHERE month(date)=? and year(date)=? and park=? and full=0 ORDER BY date ASC");
 				ps.setString(1, msg[0]);// month
 				ps.setString(2, msg[1]);// year
 				ps.setString(3, msg[2]); // park
@@ -1675,6 +1675,8 @@ public class sqlConnector {
 			 * @return boolean: true if successed
 			 */
 			public boolean addToWaitingList(String orderNum) {
+				System.out.println("This is to add to waiting list");
+				
 				LocalDateTime now = LocalDateTime.now();
 				try {
 					PreparedStatement ps = conn.prepareStatement(
@@ -1699,7 +1701,7 @@ public class sqlConnector {
 			public boolean removeFromWaitingList(String orderToRemove) {
 				Statement stm;
 				try {
-					PreparedStatement ps = conn.prepareStatement("DELETE FROM project.waitinglist WHERE watingOrder = ?");
+					PreparedStatement ps = conn.prepareStatement("DELETE FROM project.waitinglist WHERE waitingOrder = ?");
 					stm = conn.createStatement();
 					ps.setString(1, orderToRemove);
 					ps.executeUpdate();
@@ -1718,7 +1720,7 @@ public class sqlConnector {
 			public boolean IsOrderInWaitingList(int numOfOrder) {
 				try {
 
-					PreparedStatement ps = conn.prepareStatement("SELECT * from project.waitinglist WHERE watingOrder = ?");
+					PreparedStatement ps = conn.prepareStatement("SELECT * from project.waitinglist WHERE waitingOrder = ?");
 					ps.setInt(1, numOfOrder);
 					ResultSet rs = ps.executeQuery();
 					return rs.next(); // return: true if numOfOrder exists in project.waitinglist DB
@@ -1734,23 +1736,24 @@ public class sqlConnector {
 			 * @param canceledOrder_DateOfVisit
 			 * @return ArrayList<Order> sorted by timestamp in DB
 			 */ 
-			public ArrayList<Order> getSortedWatingOrders(int canceledOrder_DateOfVisit) {
+			public ArrayList<Order> getSortedWatingOrders(String canceledOrder_DateOfVisit) {
 				Statement stm;
 				try {
 					ArrayList<Order> waitingOrders = new ArrayList<>();
 					PreparedStatement ps = conn.prepareStatement(
-							"SELECT * FROM project.waitinglist join project.order ON project.waitinglist.watingOrder =  project.order.orderNum"
-									+ "where DateOfVisit = ?" + "ORDER BY timestamp;");
-					ps.setInt(1,canceledOrder_DateOfVisit);
+							"SELECT * FROM project.waitinglist join project.order ON project.waitinglist.waitingOrder =  project.order.orderNum where DateOfVisit = ?  ORDER BY timestamp");
+					ps.setString(1,canceledOrder_DateOfVisit);
 					ResultSet rs = ps.executeQuery();
 
 					while (rs.next()) {
-						int orderNum = rs.getInt(5);
-						LocalTime time = (rs.getTime(7)).toLocalTime(); // rs.getTime(7) = TimeInPark
-						LocalDate dateOfVisit = (rs.getDate(8)).toLocalDate(); // rs.getDate(8) = DateOfVisit
-						String wantedPark = rs.getString(9);
-						int numberOfVisitors = rs.getInt(5);
-						float totalPrice = rs.getFloat(10);
+						int orderNum = rs.getInt(3);
+						LocalTime time = (rs.getTime(4)).toLocalTime(); // rs.getTime(7) = TimeInPark
+						String dat= rs.getString(5);
+						
+						LocalDate dateOfVisit =LocalDate.parse(dat);
+						String wantedPark = rs.getString(6);
+						int numberOfVisitors = rs.getInt(10);
+						float totalPrice = rs.getFloat(7);
 						Order o = new Order(orderNum, time, dateOfVisit, wantedPark, numberOfVisitors, totalPrice);
 						waitingOrders.add(o);
 					}
