@@ -26,7 +26,7 @@ public class WaitingListController_server {
 	/** create a thread to check for a valid waiting order in line
 	 * @param cancelledOrder_dateOfVisit
 	 */ 
-	public void sendMessageToFirstInLine(int cancelledOrder_dateOfVisit) {
+	public void sendMessageToFirstInLine(String cancelledOrder_dateOfVisit) {
 		Runnable r = new watingList_Confirmation_thread(cancelledOrder_dateOfVisit);
 		Thread t = new Thread(r);
 		t.start();
@@ -45,7 +45,7 @@ public class WaitingListController_server {
 		/** ArrayList<Order> from waiting list sorted by timestamp
 		 * @param cancelledOrder_dateOfVisit
 		 */ 
-		public watingList_Confirmation_thread(int cancelledOrder_dateOfVisit) {
+		public watingList_Confirmation_thread(String cancelledOrder_dateOfVisit) {
 			ordersInLine = sq.getSortedWatingOrders(cancelledOrder_dateOfVisit);
 		}
 		
@@ -55,6 +55,12 @@ public class WaitingListController_server {
 				/*check if ordersInLine was changed by other threads OR user*/
 				if(sq.IsOrderInWaitingList(o.getOrderNum())) 
 				{		/*check if order in line is valid*/
+					
+					try {
+						Thread.sleep(1000 *30);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 						try {
 							if (canMakeOrder(o.getTimeInPark(), o.getDateOfVisit(), o.getWantedPark(), o.getNumberOfVisitors())) 
 							{
@@ -73,25 +79,26 @@ public class WaitingListController_server {
 									
 									while(true) 
 									{
-										try 
-										{
-											Thread.sleep(1000 * 60);// 1 minute sleep 
-										}
-										catch(InterruptedException e) 
-										{ //(check confirmation status every minute)
+										
+										
+										 //(check confirmation status every minute)
 											confirmation = sq.getOrderStatus(o.getOrderNum());
+
 											now = LocalTime.now(); // Cur Time
 											//Time of order passed
 											if(now.compareTo(o.getTimeInPark()) < 0)
 											{
+												removeFromWaitingList(o.getOrderNum());
 												sq.changeStatusByOrderNum(o.getOrderNum(), "cancelled","Automatic");
 												break; // Go to next waiting order
 											}
 											 //traveler choosed to cancel
 											if(confirmation.equals("CanceledBYUser")) 
 											{
+												removeFromWaitingList(o.getOrderNum());
 												/* Manual cancelation*/
 												sq.changeStatusByOrderNum(o.getOrderNum(), "cancelled","Manually");
+												
 												break; // Go to next waiting order
 											}
 											// now is after limit
@@ -105,6 +112,7 @@ public class WaitingListController_server {
 											if(confirmation.equals("ApprovedBYUser")) 
 											{ /*user confirmed order successfully (Before limit time)*/
 												/*change order status in orders table DB*/
+												removeFromWaitingList(o.getOrderNum());
 												LocalDate toDay = LocalDate.now();
 												LocalDate visit = o.getDateOfVisit();
 												/*if now is same day of visit 
@@ -117,7 +125,7 @@ public class WaitingListController_server {
 													sq.changeStatusByOrderNum(o.getOrderNum(), "waitForConfirm","");
 												return; // no more waiters to check (end of thread)
 											}
-										}//catch
+										//catch
 									}//while
 }
 						} catch (ParseException e) {
@@ -178,13 +186,17 @@ public class WaitingListController_server {
 			to = tmp;
 
 		String[] msg = new String[4];
-		msg[0] = (from.toString()) + ":00"; // from
+		msg[0] = (from.toString()) + ":00"; // from	
 		msg[1] = (to.toString()) + ":00";// to
 		msg[2] = wantedPark;// wantedPark
+		
 		msg[3] = dateOfVisit.toString();// dateOfVisit
+		
+		
 		int currentVisitorsAtBoundry = sq.howManyForCurrentTimeAndDate(msg);
 		int availableVisitors = sq.howManyAllowedInPark(msg[2]);
-
+		
+		
 		if (currentVisitorsAtBoundry + numOfVisitors > availableVisitors)
 			return false;// Can't make order!
 		else

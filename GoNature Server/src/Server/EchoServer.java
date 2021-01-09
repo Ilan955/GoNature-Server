@@ -300,7 +300,7 @@ public class EchoServer extends AbstractServer {
 					checkString.append(result[0]);
 					checkString.append(" ");
 					checkString.append(result[1]);
-					// System.out.println("I am getEmployeeDetails: " + checkString.toString());
+					
 					bar_String = sq.getEmployeeUN(checkString.toString());
 					sb = new StringBuffer();
 					for (int i = 0; i < bar_String.length; i++) {
@@ -316,7 +316,7 @@ public class EchoServer extends AbstractServer {
 					client.sendToClient("LoggedOfSuccess");
 			case "getTravellerDetails":
 				if (sq.canGetTraveller(result[0])) {
-					// System.out.print(result[0]);
+					
 					bar_String = new String[12];
 					bar_String = sq.getTravellerFromDB(result[0]);
 					sb = new StringBuffer();
@@ -325,7 +325,7 @@ public class EchoServer extends AbstractServer {
 						sb.append(" ");
 					}
 					sendMe = sb.toString();
-					// System.out.print(sb4.toString());
+					
 					client.sendToClient(sendMe);
 				}
 				break;
@@ -396,13 +396,26 @@ public class EchoServer extends AbstractServer {
 				sq.addOrder(orderNum, result);
 				client.sendToClient(done);
 				break;
+				
+			case "getOrderNnumber":
+				int orderNumberForNewOrder = sq.nextOrder();
+				
+				
+				sb= new StringBuffer();
+				sb.append("OrderController");
+				sb.append(" ");
+				sb.append("getOrderNumber");
+				sb.append(" ");
+				sb.append(orderNumberForNewOrder);
+				client.sendToClient(sb.toString());
+				break;
 			/*
 			 * This method will search for the order and delete it
 			 */
 			case "cancelOrder":
 				sq.changeStatusOfOrder(result, "cancelled", "Manually");
 				int orderNumForWaiting = sq.getOrderNum(result);
-				server_waitingListController.sendMessageToFirstInLine(orderNumForWaiting);
+				server_waitingListController.sendMessageToFirstInLine(result[1]);
 
 				// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!here
 				// WaitingLine!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
@@ -453,7 +466,7 @@ public class EchoServer extends AbstractServer {
 				client.sendToClient(sb.toString());
 				break;
 			case "ChangeToWaitOrder":
-				System.out.println("Here1");
+				
 				sq.changeStatusOfOrder(result, "InWaitingList", "Manually");
 				client.sendToClient(done);
 				break;
@@ -620,7 +633,7 @@ public class EchoServer extends AbstractServer {
 			case "checkIfThisDateInFullCapacityTable":
 				boolean answer1 = sq.isDateInfullcapacityExists(result);
 				StringBuffer sb6 = new StringBuffer();
-				sb6.append("ParkConroller");
+				sb6.append("ParkController");
 				sb6.append(" ");
 				sb6.append("checkIfThisDateInFullCapacityTable");
 				sb6.append(" ");
@@ -766,7 +779,7 @@ public class EchoServer extends AbstractServer {
 						dat = LocalDate.now().plusDays(1).toString();
 
 						timeNow = LocalTime.parse(h + ":" + "00");
-						System.out.println(timeNow.getSecond());
+						
 						stringForComplete = sq.checkIfConfirmAlert(dat, timeNow.toString());
 						try {
 							Thread.sleep(1000 * 60 * 30);
@@ -782,15 +795,15 @@ public class EchoServer extends AbstractServer {
 					if (!(complete.length == 1)) {
 						for (int i = 0; i < complete.length; i = i + 2) {
 							sq.cancelOrderForWaiting(complete[i]);
-							System.out.println(complete[i + 1]);
-							server_waitingListController.sendMessageToFirstInLine(Integer.parseInt(complete[i + 1]));
+							
+							server_waitingListController.sendMessageToFirstInLine(complete[i + 1]);
 						}
 					}
 					if (!(halfs.length == 1)) {
 						for (int i = 0; i < halfs.length; i = i + 2) {
 							sq.cancelOrderForWaiting(halfs[i]);
-							System.out.println(halfs[i + 1]);
-							server_waitingListController.sendMessageToFirstInLine(Integer.parseInt(halfs[i + 1]));
+							
+							server_waitingListController.sendMessageToFirstInLine(halfs[i + 1]);
 						}
 
 					}
@@ -810,7 +823,7 @@ public class EchoServer extends AbstractServer {
 
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-			// System.out.println("Driver definition succeed");
+			
 		} catch (Exception ex) {
 			/* handle the error */
 			System.out.println("Driver definition failed");
