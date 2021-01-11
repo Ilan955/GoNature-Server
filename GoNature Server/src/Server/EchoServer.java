@@ -67,7 +67,7 @@ public class EchoServer extends AbstractServer {
 	 *
 	 * @param msg    The message received from the client.
 	 * @param client The connection from which the message originated.
-	 * @param
+	
 	 */
 
 	public void handleMessageFromClient(Object msg, ConnectionToClient client) {
@@ -361,28 +361,22 @@ public class EchoServer extends AbstractServer {
 				serverStopped();
 				break;
 
-		
-
-			
-
-			
-
 			case"makeMonthlyIncomeReport":
 			      sb = new StringBuffer();
 			      sb.append("ReportsController");
 			      sb.append(" ");
 			      sb.append("makeMonthlyIncomeReport");// The name of the method
 			      sb.append(" ");
-			          sb.append(sq.getMonthlyIncomes(result[0],"Traveler"));//result[0] = Date 
+			          sb.append(sq.getMonthlyIncomes(result,"Traveler"));//result[0] = Date 
 			          sb.append(" ");
-			          sb.append(sq.getMonthlyIncomes(result[0],"Member"));//result[0] = Date 
+			          sb.append(sq.getMonthlyIncomes(result,"Member"));//result[0] = Date 
 					  sb.append(" ");
-					  sb.append(sq.getMonthlyIncomes(result[0],"Family"));//result[0] = Date 
+					  sb.append(sq.getMonthlyIncomes(result,"Family"));//result[0] = Date 
 					  sb.append(" ");
-			          sb.append(sq.getMonthlyIncomes(result[0],"groupGuide"));//result[0] = Date 
+			          sb.append(sq.getMonthlyIncomes(result,"groupGuide"));//result[0] = Date 
 			          sb.append(" ");
 			          //get traveler in park incomes/
-			          sb.append(sq.getMonthlyIncomes_TravelerInPark(result[0]));
+			          sb.append(sq.getMonthlyIncomes_TravelerInPark(result));
 			          
 			          client.sendToClient(sb.toString());
 					break;

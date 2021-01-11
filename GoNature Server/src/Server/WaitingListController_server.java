@@ -24,7 +24,7 @@ public class WaitingListController_server {
 	}
 
 	/** create a thread to check for a valid waiting order in line
-	 * @param cancelledOrder_dateOfVisit
+	 * @param cancelledOrder_dateOfVisit -date
 	 */ 
 	public void sendMessageToFirstInLine(String cancelledOrder_dateOfVisit) {
 		Runnable r = new watingList_Confirmation_thread(cancelledOrder_dateOfVisit);
@@ -138,12 +138,12 @@ public class WaitingListController_server {
 	}// (inner class) watingList_Confirmation_thread 
 	
 	/** check if order is valid to enter the park
-	 * @param time wanted time of visit in the park
-	 * @param dateOfVisit
-	 * @param wantedPark
-	 * @param numOfVisitors
-	 * @return
-	 * @throws ParseException 
+	 * @param time wanted time of visit in the park - item
+	 * @param dateOfVisit -date
+	 * @param wantedPark -wanted
+	 * @param numOfVisitors -num
+
+	 * @throws ParseException - throw
 	 */ 
 	public boolean canMakeOrder(LocalTime time, LocalDate dateOfVisit, String wantedPark, int numOfVisitors) throws ParseException {
 		LocalTime openingTime = LocalTime.of(8, 0);
@@ -205,8 +205,8 @@ public class WaitingListController_server {
 	
 	 
 	/** remove an order from waitinglist DB
-	 * @param orderNumber
-	 * @return
+	 * @param orderNumber - order
+	
 	 */
 	public boolean removeFromWaitingList(int orderNumber) {
 		return sq.removeFromWaitingList(String.valueOf(orderNumber));

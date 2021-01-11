@@ -125,7 +125,7 @@ public class sqlConnector {
 	 * @param msg[6]    - String containing visitors type
 	 * @param msg[7]    - String containing visitors max visitors (or family
 	 *                  members).
-	 * @param memberCNT - next available member id.
+	 * @param msg - next available member id.
 	 * 
 	 * @return String - containing member id or false if process failed.
 	 */
@@ -309,8 +309,8 @@ public class sqlConnector {
 	 * @param result[0] - The time in the park
 	 * @param result[1] - The date of the visit
 	 * @param result[2] - The wanted park
-	 * @returnthe number fo visitors for the current time date and park
-	 * @throws ParseException
+	 * @return int - i
+	 * @throws ParseException - Parse
 	 */
 	public int howManyForCurrentTimeAndDate(String[] result) throws ParseException {
 		Statement stm;
@@ -342,14 +342,14 @@ public class sqlConnector {
 	 * Description of addOrder(int orderNum, String[] result) Method to insert new
 	 * order to table
 	 * 
-	 * @param res[0] -time
-	 * @param res[1] -date
-	 * @param res[2] -parkname
-	 * @param res[3] -price
-	 * @param res[4] -id
-	 * @param res[5] -type
-	 * @param res[6] -numOfVisit
-	 * @return void
+	 * @param result[0] -time
+	 * @param result[1] -date
+	 * @param result[2] -parkname
+	 * @param result[3] -price
+	 * @param result[4] -id
+	 * @param result[5] -type
+	 * @param result[6] -numOfVisit
+	 * @param orderNum -  orderNum
 	 */
 
 	public void addOrder(int orderNum, String[] result) {
@@ -385,9 +385,9 @@ public class sqlConnector {
 	 * @param result[1] - Date of visit
 	 * @param result[2] - Wanted park
 	 * @param result[3] - Id of client
-	 * @param status
-	 * @param comment
-	 * @return void
+	 * @param status - staus
+	 * @param comment - commet
+	 
 	 */
 	public void changeStatusOfOrder(String[] result, String status, String comment) {
 		Statement stm;
@@ -415,7 +415,7 @@ public class sqlConnector {
 	 * based on the id given from the client
 	 * 
 	 * @param iD - The id of the client
-	 * @return
+	 *@return String -r
 	 */
 	public String getOrders(String iD) {
 		Statement stm;
@@ -449,6 +449,7 @@ public class sqlConnector {
 	 * 
 	 * @param result[0] - The date of the visit
 	 * @param result[1] - The Id of the client
+	 * @return String - str
 	 */
 	public String checkIfHavingTomorrow(String[] result) {
 		String s = "";
@@ -492,7 +493,7 @@ public class sqlConnector {
 	 * 
 	 * @param dat         - Date of the visit
 	 * @param timeOfVisit - Time of the visit
-	 * @return
+	 * @return String - s
 	 */
 	public String checkIfConfirmAlert(String dat, String timeOfVisit) {
 		StringBuffer sb = new StringBuffer();
@@ -519,7 +520,7 @@ public class sqlConnector {
 	 * is automaticly
 	 * 
 	 * @param orderNum - The number of the order
-	 * @return void
+	
 	 */
 	public void cancelOrderForWaiting(String orderNum) {
 		try {
@@ -539,7 +540,7 @@ public class sqlConnector {
 	 * make the status as confirmed after the client approving it day before his
 	 * visit
 	 * 
-	 * @param orderNum
+	 * @param orderNum - ordere
 	 */
 	public void conAlert(String orderNum) {
 		try {
@@ -562,7 +563,7 @@ public class sqlConnector {
 	 * 
 	 * @param result[0] - Date from
 	 * @param result[1] - Date to
-	 * @param status
+	 * @param status -status
 	 * @return number of canceled orders
 	 */
 	public int checkHowManyCancelled(String[] result, String status) {
@@ -628,55 +629,59 @@ public class sqlConnector {
 
 	////// Reports start/////
 	
-	public String getMonthlyIncomes(String date_month, String type) {
+	public String getMonthlyIncomes(String date_month[], String type) {
 		int cnt;
 		int income = 0;
-		LocalDate date = LocalDate.parse(date_month);
+		LocalDate date = LocalDate.parse(date_month[0]);
+		String park = date_month[1];
+
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT count(*) ,sum(TotalPrice) FROM project.order WHERE type = ? && (MONTH(DateOfVisit) = ? AND YEAR(DateOfVisit) = ?) && status = 'done'");
-			ps.setString(1,type);
-			ps.setInt(2,date.getMonthValue());//MONTH
-			ps.setInt(3,date.getYear());//YEAR
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT sum(numOfVisitors) ,sum(TotalPrice) FROM project.order WHERE type = ? && (MONTH(DateOfVisit) = ? AND YEAR(DateOfVisit) = ? AND wantedPark=? AND status='done') && status = 'done'");
+			ps.setString(1, type);
+			ps.setInt(2, date.getMonthValue());// MONTH
+			ps.setInt(3, date.getYear());// YEAR
+			ps.setString(4, park);// park
 			ResultSet rs = ps.executeQuery();
 			rs.next();
-			cnt = rs.getInt(1);//count(*)
-			if(cnt > 0) {
+			cnt = rs.getInt(1);// count(*)
+			if (cnt > 0) {
 				income = rs.getInt(2);
 			}
 			String res = "" + cnt + " " + income;
-			
 			return res;
-
 
 		} catch (SQLException e) {
 			e.printStackTrace();
-      return null;
+			return null;
 
 		}
 	}
-	
-	
-	public String getMonthlyIncomes_TravelerInPark(String date_month) {
+
+	public String getMonthlyIncomes_TravelerInPark(String[] date_month) {
 		int cnt;
 		int income = 0;
-		LocalDate date = LocalDate.parse(date_month);
+		LocalDate date = LocalDate.parse(date_month[0]);
+		String park = date_month[1];
 		try {
-			PreparedStatement ps = conn.prepareStatement("SELECT count(*) ,sum(price) FROM project.travellerinpark WHERE (MONTH(Date) = ? AND YEAR(Date) = ?) && inPark = 0");
-			ps.setInt(1,date.getMonthValue());//MONTH
-			ps.setInt(2,date.getYear());//YEAR
+			PreparedStatement ps = conn.prepareStatement(
+					"SELECT sum(numOfVisitors) ,sum(price) FROM project.travellerinpark WHERE (MONTH(Date) = ? AND YEAR(Date) = ? AND wantedPark = ?) && inPark = 0");
+			ps.setInt(1, date.getMonthValue());// MONTH
+			ps.setInt(2, date.getYear());// YEAR
+			ps.setString(3, park);// park
 			ResultSet rs = ps.executeQuery();
 			rs.next();
-			cnt = rs.getInt(1);//count(*)
-			if(cnt > 0) {
+			cnt = rs.getInt(1);// count(*)
+			if (cnt > 0) {
 				income = rs.getInt(2);
 			}
 			String res = "" + cnt + " " + income;
-			
+
 			return res;
 
 		} catch (SQLException e) {
 			e.printStackTrace();
-      return null;
+			return null;
 
 		}
 	}
@@ -806,7 +811,7 @@ public class sqlConnector {
 		/**
 		 * this method get max available visitors in park
 		 * 
-		 * @param parkName
+		 * @param parkName - parkName
 		 * @return max available visitors in park
 		 */
 		public int howManyAllowedInPark(String parkName) {
@@ -836,7 +841,7 @@ public class sqlConnector {
 		/**
 		 * this method get current unexpected visitors in park
 		 * 
-		 * @param parkName
+		 * @param parkName - parkName
 		 * @return current unexpected visitors in park
 		 */
 		public int howManyUnexpectedVisitorsInPark(String parkName) {
@@ -864,7 +869,7 @@ public class sqlConnector {
 		/**
 		 * this method get current visitors now in park
 		 * 
-		 * @param parkName
+		 * @param parkName - parkName
 		 * @return current visitors in park
 		 */
 		public int howManyCurrentvisitorsForOrdersInPark(String parkName) {
@@ -890,7 +895,7 @@ public class sqlConnector {
 		/**
 		 * this method getmax visitors now in park
 		 * 
-		 * @param parkName
+		 * @param parkName - parkName
 		 * @return max visitors in park
 		 */
 		public int howManyMaxvisitorsAllowedInPark(String parkName) {
@@ -916,7 +921,7 @@ public class sqlConnector {
 		/**
 		 * this method get max duration in park
 		 * 
-		 * @param parkName
+		 * @param parkName - parkName
 		 * @return max duration in park
 		 */
 		public float howmanyTimeEveryVisitorInPark(String parkName) {
@@ -1207,7 +1212,7 @@ public class sqlConnector {
 		}
 	/**
 	 * this method get details of travellerinpark table
-	 * @param id
+ 	 * @param id - id
 	 * @return traveller details
 	 */
 		public String getTravellerInParkDetails(String id) {
@@ -1258,7 +1263,7 @@ public class sqlConnector {
 		}
 	/**
 	 * this methods get details for exit park
-	 * @param id
+	 * @param id - id
 	 * @return order details 
 	 */
 		public String getOrderDetailsForExitPark(String id) {
@@ -1288,7 +1293,7 @@ public class sqlConnector {
 		// Report controller start
 		/**
 		 * this method gets details of full capacity table for usage report
-		 * @param msg - month &year
+		 * @param msg - month and year
 		 * @return details of full capacity table
 		 */
 		public String getUnFullCapacityTableInDates(String[] msg) {
@@ -1315,7 +1320,7 @@ public class sqlConnector {
 		}
 		/**
 		 * this method gets details of full capacity table for usage report
-		 * @param msg - month &year
+		 * @param msg - month  and year
 		 * @return details of full capacity table
 		 */
 		public String getUnFullCapacityTableInDatesAndNumbers(String[] msg) {
@@ -1374,7 +1379,7 @@ public class sqlConnector {
 		}
 	/**
 	 * this method check if the request is approve
-	 * @param result- id&type
+	 * @param result- id annd type
 	 * @return status of request- 0 for unapprove and 1 for approve
 	 */
 		public int IsApproveEnterParkForTraveller(String[] result) {
@@ -1400,7 +1405,7 @@ public class sqlConnector {
 		}
 	/**
 	 * this method get details from request table
-	 * @param park
+	 * @param park - park
 	 * @return details request table
 	 */
 		public String getRequestTableOfEnterPark(String park) {
@@ -1509,8 +1514,8 @@ public class sqlConnector {
 
 
 		/** set Discount Status
-		 * @param parkName
-		 * @param status
+		 * @param parkName - park
+		 * @param status -status
 		 */
 		public void setDiscountStatus(String parkName, String status) {
 			try {
@@ -1524,10 +1529,10 @@ public class sqlConnector {
 			
 		}
 
-		/** getManagerDiscount if approved && valid for dateOfVisit - return precentage ,else return -1
-		 * @param parkName
-		 * @param dateOfVisit
-		 * @return precentage
+		/** getManagerDiscount if approved and valid for dateOfVisit - return precentage ,else return -1
+		 * @param parkName - park
+		 * @param dateOfVisit - date 
+		 * @return precentage - precent
 		 */ 
 		public float getManagerDiscount(String parkName, String dateOfVisit) {
 			LocalDate temp = LocalDate.parse(dateOfVisit);
@@ -1592,11 +1597,11 @@ public class sqlConnector {
 		
 			
 			/** update Manager Discount - always set status: 'waitingForApprove' after update
-			 * @param startDate
-			 * @param lastDate
-			 * @param precentage
-			 * @param parkName
-			 * @return boolean: true if successed
+			 * @param startDate - start
+			 * @param lastDate - last
+			 * @param precentage - precent
+			 * @param parkName - park
+			 * @return boolean -  true if successed
 			 */
 			public boolean updateManagerDiscount(String startDate, String lastDate, String precentage, String parkName) {
 				Statement stm;
@@ -1636,9 +1641,9 @@ public class sqlConnector {
 			
 	/*---------------------------------------------- WaitingList Start ---------------------------------------------------*/		
 			/**change Status By OrderNum of order in orders table DB
-			 * @param orderNum
-			 * @param status
-			 * @param comment
+			 * @param orderNum - oreder
+			 * @param status - statius
+			 * @param comment - comment
 			 */		
 			public void changeStatusByOrderNum(int orderNum ,String status, String comment) {
 				Statement stm;
@@ -1671,8 +1676,8 @@ public class sqlConnector {
 		}
 			
 			/** add Order To Waiting List DB with timestamp of now
-			 * @param orderNum
-			 * @return boolean: true if successed
+			 * @param orderNum - ordernum
+			 * @return boolean- true if successed
 			 */
 			public boolean addToWaitingList(String orderNum) {
 				System.out.println("This is to add to waiting list");
@@ -1695,8 +1700,8 @@ public class sqlConnector {
 			
 			
 			/** remove order From Waiting List
-			 * @param orderToRemove
-			 * @return boolean: true if successed
+			 * @param orderToRemove - order
+			 * @return boolean - true if successed
 			 */
 			public boolean removeFromWaitingList(String orderToRemove) {
 				Statement stm;
@@ -1714,7 +1719,7 @@ public class sqlConnector {
 			}
 
 			/**
-			 * @param numOfOrder
+			 * @param numOfOrder -num
 			 * @return boolean: true if successed
 			 */
 			public boolean IsOrderInWaitingList(int numOfOrder) {
@@ -1731,10 +1736,10 @@ public class sqlConnector {
 			}
 			
 			
-			/** return sorted ArrayList<Order> of waiting orders where dateOfVisit =canceledOrderDateOfVisit
+			/**
 			 * 
-			 * @param canceledOrder_DateOfVisit
-			 * @return ArrayList<Order> sorted by timestamp in DB
+			 * @param canceledOrder_DateOfVisit - date
+			 * @return ArrayList- a-  sorted by timestamp in DB
 			 */ 
 			public ArrayList<Order> getSortedWatingOrders(String canceledOrder_DateOfVisit) {
 				Statement stm;
@@ -1776,6 +1781,7 @@ public class sqlConnector {
 			 * Description of canGetEmployee:
 			 * canGetEmployee will return true if employee exists on our DB and false otherwise
 			 * @param userName will be employee userName which is PK for our employees DB
+			 * @return boolean true or false
 			 */
 			
 			public boolean canGetEmployee(String userName) { 
@@ -1798,6 +1804,7 @@ public class sqlConnector {
 			/**
 			 * Description of sendNewRequestID:
 			 * sendNewRequestID will return number of tuples in requests for park changes for the use of request id which is PK for DB
+			 * @return int - i
 			 */
 			
 			public int sendNewRequestID() { 
@@ -1824,6 +1831,8 @@ public class sqlConnector {
 			 * method returns a string
 			 * "true" means successfully updated DB with this request
 			 * "false" means that it could not insert new request
+			 * @param s - s
+			 * @return String - sq
 			 */
 
 			public String sendParkSettingsRequestToDepManager(String[] s) {
@@ -1855,9 +1864,10 @@ public class sqlConnector {
 			 * Description of getEmployeeUN:
 			 * getEmployeeUN will return to client the data related with this employee (identified by userName )
 			 * @param empID is the data which comes from client
-			 * @param check[0] will have the employee userName
+			
 			 * from this method we will navigate to goClient which handles message from server and by the data returned from here 
 			 * we will be able to alert the employee if userName exists on DB, if password is incorrect or if employee can enter GoNature system
+			 * @return String[] - str 
 			 */
 
 			public String[] getEmployeeUN(String empID) // if employee exists, DB returns this employee as a tuple (String[])
@@ -1909,6 +1919,7 @@ public class sqlConnector {
 			 * from this method we will navigate to goClient which handles message from server and by the data returned from here 
 			 * true means logout executed appropriately 
 			 * false means SQL exception
+			 * @return boolean - truie
 			 */
 			
 			public boolean logOutEmployee(String userName) {
@@ -1933,6 +1944,7 @@ public class sqlConnector {
 			 * @param maxDur is the desired maximum duration in park requested by park manager
 			 * true means park setting are changed
 			 * false means could not perform the change
+			 * @return boolean true or
 			 */
 			
 			public boolean updateParkChangesInParkTable(String parkName, String maxVisitors, String gap, String maxDur) { //Bar employee
@@ -1959,6 +1971,7 @@ public class sqlConnector {
 			 * if we got to this method it means that departmentManager wants to see park settings changes requests from park managers
 			 * this method will return a large string with every available request (department manager did not touch it yet)
 			 * for the use of EmployeeController so we will be able to display the requests via table
+			 * @return String - s 
 			 */
 			
 			public String getParkSettingsRequests() {
@@ -2018,6 +2031,7 @@ public class sqlConnector {
 			 * requests which he did not touch yet (and only them!)
 			 * @param string will be the request id 
 			 * if we got to this method it means that department manager had clicked on approve \ disapprove button on a specific request in penidngRequest screen
+			 * @return boolean - true or
 			 */
 			
 			public boolean updateParkChangeRequestStatus(String string) {
@@ -2049,6 +2063,7 @@ public class sqlConnector {
 			 * from this method we will navigate to goClient which handles message from server and by the data returned from here 
 			 * we will be able to alert the traveller if he exists on DB, if it is, we will pull traveller from DB with all of its data.
 			 * if traveller does not exist, we will create a default traveller 
+			 * @return String[] - the str
 			 */
 			public String[] getTravellerFromDB(String travellerID) // returns a String[] with this traveller info
 			{
@@ -2105,6 +2120,7 @@ public class sqlConnector {
 			 * Description of canGetTraveller:
 			 * canGetTraveller will return true if traveller exists on our DB and false otherwise
 			 * @param travellerID will be traveller id which is PK for our travellers DB
+			 * @return boolean - true or false
 			 */
 			
 			public boolean canGetTraveller(String travellerID) // Checks if traveller exists in our DB (By ID)
